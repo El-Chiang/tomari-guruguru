@@ -9,24 +9,32 @@
   html, body { margin: 0; padding: 0; height: 100%; }
   img { -webkit-user-drag: none; }
 
-  /* レイヤーアニメーション。振幅/速度は CSS 変数で oc-live.jsx から上書き */
+  /* レイヤーアニメーション。振幅/速度は CSS 変数で oc-live.jsx から上書き。
+     視線(--gaze-x/y)は JS が毎フレーム更新する -1..1 の数値 */
   :root {
     --hair-amp: 2deg;     --hair-dur: 3.6s;
     --breathe-dur: 4s;
-    --blink-dur: 5.5s;
     --tilt-amp: 2.5deg;   --tilt-dur: 5s;
     --sway-amp: 1.5deg;   --sway-dur: 6s;
-    --eye-amp: 0.6%;      --eye-dur: 5s;
+    --eye-amp-x: 0.6%;    --eye-amp-y: 0.4%;
+    --brow-amp: 0.66%;    --brow-dur: 7s;
+    --gaze-x: 0;          --gaze-y: 0;
   }
+
+  /* 視線・まばたきはポインタ/JS駆動なので常時有効にしておく */
+  .ly-eyemove {
+    will-change: transform;
+    transform: translate(calc(var(--gaze-x, 0) * var(--eye-amp-x, 0%)),
+                         calc(var(--gaze-y, 0) * var(--eye-amp-y, 0%)));
+  }
+  .ly-eyes { transform-origin: 50% 40%; transition: transform 90ms ease; }
+  .ly-eyes.blinking { transform: scaleY(0.06); }
+
   @media (prefers-reduced-motion: no-preference) {
     .bob { animation: bob 3.4s ease-in-out infinite; }
     @keyframes bob {
       0%, 100% { translate: 0 0; }
       50% { translate: 0 -1.2vmin; }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
     }
 
     /* 髪の揺れ: クラウン付近を支点に左右へ */
@@ -69,24 +77,11 @@
       50%      { transform: rotate(var(--sway-amp)); }
     }
 
-    /* 目線: 瞳を左右へ少し動かす */
-    .ly-eyemove {
-      animation: eyeMove var(--eye-dur) ease-in-out infinite;
-    }
-    @keyframes eyeMove {
-      0%, 18%   { transform: translateX(calc(var(--eye-amp) * -1)); }
-      46%, 64%  { transform: translateX(var(--eye-amp)); }
-      92%, 100% { transform: translateX(calc(var(--eye-amp) * -1)); }
-    }
-
-    /* まばたき(簡易): 目の中心を支点に一瞬縦に潰す */
-    .ly-blink {
-      transform-origin: 50% 42%;
-      animation: blink var(--blink-dur) ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%, 92%, 100% { transform: scaleY(1); }
-      95%           { transform: scaleY(0.08); }
+    /* 眉: 大半は静止、たまにピクッと上げる */
+    .ly-brow { animation: browRaise var(--brow-dur) ease-in-out infinite; }
+    @keyframes browRaise {
+      0%, 62%, 100% { transform: translateY(0); }
+      70%, 82%      { transform: translateY(calc(var(--brow-amp, 0%) * -1)); }
     }
   }
 </style>

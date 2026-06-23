@@ -10,6 +10,7 @@
 //   'eyes'     目（瞳・まつ毛）。まばたきの対象。瞳だけ eyemove で動かす
 // hair:   髪揺れを与えるレイヤーに { amp:振幅倍率, phase:位相(秒) }
 // eyemove: 目線で動かすレイヤー（瞳のみ。まつ毛・眼窩は動かさない）
+// brow:    眉を時々ピクッと上げるレイヤー（眉のみ）
 //
 // ※呼吸・bob・首かしげ・体ゆれ・目線・まばたきは oc-live.jsx 側でグループ
 //   単位にかかる。
@@ -30,7 +31,7 @@ export default {
     { id: 'face',       file: 'face',       group: 'head' },
     { id: 'nose',       file: 'nose',       group: 'head' },
     { id: 'mouth',      file: 'mouth',      group: 'head' },
-    { id: 'eyebrow',    file: 'eyebrow',    group: 'head' },
+    { id: 'eyebrow',    file: 'eyebrow',    group: 'head', brow: true },
     { id: 'irides',     file: 'irides',     group: 'eyes', eyemove: true },
     { id: 'eyelash',    file: 'eyelash',    group: 'eyes' },
     { id: 'front_hair', file: 'front_hair', group: 'head', hair: { amp: 1.0, phase: 0 } },
