@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トマリ ライブ（レイヤー）</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  img { -webkit-user-drag: none; }
+
+  /* レイヤーアニメーション。振幅/速度は CSS 変数でtweaksから上書き */
+  :root {
+    --hair-amp: 2deg;
+    --hair-dur: 3.6s;
+    --breathe-dur: 4s;
+    --blink-dur: 5.5s;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bob { animation: bob 3.4s ease-in-out infinite; }
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -1.2vmin; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    /* 髪の揺れ: クラウン付近を支点に左右へ */
+    .ly-hair {
+      transform-origin: 50% 18%;
+      animation: hairSway var(--hair-dur) ease-in-out infinite;
+    }
+    @keyframes hairSway {
+      0%, 100% { transform: rotate(calc(var(--hair-amp) * -1)); }
+      50%      { transform: rotate(var(--hair-amp)); }
+    }
+
+    /* 呼吸: 下端支点でわずかに伸縮＋上下 */
+    .ly-breathe {
+      transform-origin: 50% 100%;
+      animation: breathe var(--breathe-dur) ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scaleY(1) translateY(0); }
+      50%      { transform: scaleY(1.012) translateY(-0.4%); }
+    }
+
+    /* まばたき: 目の中心を支点に一瞬縦に潰す */
+    .ly-blink {
+      transform-origin: 50% 42%;
+      animation: blink var(--blink-dur) ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      95%           { transform: scaleY(0.08); }
+    }
+
+    .ly-armL { transform-origin: 50% 30%; animation: armSway var(--breathe-dur) ease-in-out infinite; }
+    .ly-armR { transform-origin: 50% 30%; animation: armSway var(--breathe-dur) ease-in-out infinite reverse; }
+    @keyframes armSway {
+      0%, 100% { transform: rotate(-0.6deg); }
+      50%      { transform: rotate(0.6deg); }
+    }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="src/tweaks-panel.jsx"></script>
+<script type="module" src="src/oc-live.jsx"></script>
+</body>
+</html>

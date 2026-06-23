@@ -7,7 +7,7 @@ const { useState, useEffect, useRef, useMemo } = React;
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "followRange": 340,
   "smoothing": 0.3,
-  "charSize": 64,
+  "charSize": 48,
   "bgColor": "#FFF8EE",
   "showDebug": false
 }/*EDITMODE-END*/;

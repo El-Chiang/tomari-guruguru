@@ -11,5 +11,7 @@ node_modules/
 dist/
 public/*
 !public/slices2/
+!public/slices_oc/
+!public/oc-layers/
 .DS_Store
 Thumbs.db

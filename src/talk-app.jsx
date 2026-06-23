@@ -7,13 +7,14 @@ const { useState, useEffect, useRef, useMemo } = React;
 const TALK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "followRange": 340,
   "smoothing": 0.3,
-  "charSize": 64,
+  "charSize": 48,
   "bgColor": "#FFF8EE",
   "micGain": 1.6,
   "thHalf": 0.07,
   "thFull": 0.2,
   "release": 0.12,
-  "autoBlink": true
+  "autoBlink": true,
+  "autoTalk": true
 }/*EDITMODE-END*/;
 
 const { rows: ROWS, cols: COLS } = charConfig;
@@ -142,10 +143,12 @@ function App() {
       if (meterRef.current) {
         meterRef.current.style.width = `${clamp(env.current / 0.4, 0, 1) * 100}%`;
       }
-      const lv = env.current;
-      const m = lv >= tw.thFull ? 2 : lv >= tw.thHalf ? 1 : 0;
-      if (m !== lastMouth && now - lastSwitch > 70) {
-        lastMouth = m; lastSwitch = now; setMouth(m);
+      if (!tw.autoTalk) {
+        const lv = env.current;
+        const m = lv >= tw.thFull ? 2 : lv >= tw.thHalf ? 1 : 0;
+        if (m !== lastMouth && now - lastSwitch > 70) {
+          lastMouth = m; lastSwitch = now; setMouth(m);
+        }
       }
       raf = requestAnimationFrame(tick);
     }
@@ -192,6 +195,32 @@ function App() {
     schedule();
     return () => { alive = false; clearTimeout(timer); };
   }, [t.autoBlink]);
+
+  // ランダム口パク（マイクなしのデモ。発話の音節っぽい開閉＋文の切れ目の間）
+  useEffect(() => {
+    if (!t.autoTalk) return;
+    let alive = true;
+    let timer;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    function step() {
+      if (!alive) return;
+      if (Math.random() < 0.18) {
+        // 文の切れ目: 口を閉じて少し間
+        setMouth(0);
+        timer = setTimeout(step, rand(600, 1500));
+      } else {
+        // 発話: 中間 or 全開 → 一瞬閉じて次の音
+        setMouth(Math.random() < 0.45 ? 1 : 2);
+        timer = setTimeout(() => {
+          if (!alive) return;
+          setMouth(0);
+          timer = setTimeout(step, rand(110, 240));
+        }, rand(180, 380));
+      }
+    }
+    step();
+    return () => { alive = false; clearTimeout(timer); setMouth(0); };
+  }, [t.autoTalk]);
 
   async function toggleMic() {
     setMicErr('');
@@ -282,6 +311,16 @@ function App() {
           {micOn ? 'マイク停止' : 'マイク開始'}
         </button>
 
+        <button onClick={() => setTweak('autoTalk', !t.autoTalk)} style={{
+          fontFamily: 'inherit', fontWeight: 700, fontSize: 14,
+          color: t.autoTalk ? '#fff' : inkColor,
+          background: t.autoTalk ? '#8FBC8F' : 'transparent',
+          border: `1.5px solid ${t.autoTalk ? '#8FBC8F' : lineColor}`,
+          borderRadius: 12, padding: '9px 16px', cursor: 'pointer', minHeight: 44
+        }}>
+          {t.autoTalk ? 'ランダム口パク中' : 'ランダム口パク'}
+        </button>
+
         <label style={{
           display: 'flex', alignItems: 'center', gap: 8,
           fontWeight: 700, fontSize: 14, color: inkColor,
@@ -322,6 +361,8 @@ function App() {
 
       <TweaksPanel>
         <TweakSection label="口パク"></TweakSection>
+        <TweakToggle label="ランダム口パク（マイク不要）" value={t.autoTalk}
+          onChange={(v) => setTweak('autoTalk', v)}></TweakToggle>
         <TweakSlider label="マイク感度" value={t.micGain} min={0.3} max={5} step={0.1}
           onChange={(v) => setTweak('micGain', v)}></TweakSlider>
         <TweakSlider label="しきい値（はんびらき）" value={t.thHalf} min={0.01} max={0.3} step={0.005}
