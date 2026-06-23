@@ -9,12 +9,14 @@
   html, body { margin: 0; padding: 0; height: 100%; }
   img { -webkit-user-drag: none; }
 
-  /* レイヤーアニメーション。振幅/速度は CSS 変数でtweaksから上書き */
+  /* レイヤーアニメーション。振幅/速度は CSS 変数で oc-live.jsx から上書き */
   :root {
-    --hair-amp: 2deg;
-    --hair-dur: 3.6s;
+    --hair-amp: 2deg;     --hair-dur: 3.6s;
     --breathe-dur: 4s;
     --blink-dur: 5.5s;
+    --tilt-amp: 2.5deg;   --tilt-dur: 5s;
+    --sway-amp: 1.5deg;   --sway-dur: 6s;
+    --eye-amp: 0.6%;      --eye-dur: 5s;
   }
   @media (prefers-reduced-motion: no-preference) {
     .bob { animation: bob 3.4s ease-in-out infinite; }
@@ -47,7 +49,37 @@
       50%      { transform: scaleY(1.012) translateY(-0.4%); }
     }
 
-    /* まばたき: 目の中心を支点に一瞬縦に潰す */
+    /* 首かしげ: 首の付け根を支点に頭部グループを左右へ傾ける */
+    .ly-tilt {
+      transform-origin: 50% 72%;
+      animation: headTilt var(--tilt-dur) ease-in-out infinite;
+    }
+    @keyframes headTilt {
+      0%, 100% { transform: rotate(calc(var(--tilt-amp) * -1)); }
+      50%      { transform: rotate(var(--tilt-amp)); }
+    }
+
+    /* 体ゆれ: 下端支点で全身をゆっくり左右へ */
+    .ly-sway {
+      transform-origin: 50% 100%;
+      animation: bodySway var(--sway-dur) ease-in-out infinite;
+    }
+    @keyframes bodySway {
+      0%, 100% { transform: rotate(calc(var(--sway-amp) * -1)); }
+      50%      { transform: rotate(var(--sway-amp)); }
+    }
+
+    /* 目線: 瞳を左右へ少し動かす */
+    .ly-eyemove {
+      animation: eyeMove var(--eye-dur) ease-in-out infinite;
+    }
+    @keyframes eyeMove {
+      0%, 18%   { transform: translateX(calc(var(--eye-amp) * -1)); }
+      46%, 64%  { transform: translateX(var(--eye-amp)); }
+      92%, 100% { transform: translateX(calc(var(--eye-amp) * -1)); }
+    }
+
+    /* まばたき(簡易): 目の中心を支点に一瞬縦に潰す */
     .ly-blink {
       transform-origin: 50% 42%;
       animation: blink var(--blink-dur) ease-in-out infinite;
@@ -55,13 +87,6 @@
     @keyframes blink {
       0%, 92%, 100% { transform: scaleY(1); }
       95%           { transform: scaleY(0.08); }
-    }
-
-    .ly-armL { transform-origin: 50% 30%; animation: armSway var(--breathe-dur) ease-in-out infinite; }
-    .ly-armR { transform-origin: 50% 30%; animation: armSway var(--breathe-dur) ease-in-out infinite reverse; }
-    @keyframes armSway {
-      0%, 100% { transform: rotate(-0.6deg); }
-      50%      { transform: rotate(0.6deg); }
     }
   }
 </style>
