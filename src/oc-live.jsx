@@ -14,10 +14,15 @@ const LIVE_DEFAULTS = /*EDITMODE-BEGIN*/{
   "swayOn": false,   "swayAmp": 1.5,  "swayDur": 6,
   "eyeOn": true,     "eyeAmp": 4,
   "blinkOn": true,
-  "browOn": true,    "browAmp": 1.2,  "browDur": 7
+  "browOn": true,    "browAmp": 1.2,  "browDur": 7,
+  "talkOn": false
 }/*EDITMODE-END*/;
 
 const BG_OPTIONS = ['#FFF8EE', '#FDEFEF', '#EEF4FB', '#2B2926'];
+
+// 口型レイヤー: 閉口=既存 mouth.webp、中口=mouth_mid.webp（全画布同座標）
+// ※開口(C)を拆いたら { 1:'mouth_mid', 2:'mouth_open' } に増やすだけ
+const MOUTH_LAYER = { 1: 'mouth_mid' };
 
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
@@ -38,6 +43,7 @@ function App() {
   const [t, setTweak] = useTweaks(LIVE_DEFAULTS);
   const [panelOpen, setPanelOpen] = useState(true);
   const [blink, setBlink] = useState(false);
+  const [mouth, setMouth] = useState(0); // 0 閉 / 1 中
 
   const stageRef = useRef(null);   // CSS変数(--gaze-x/y)を流す先
   const charRef = useRef(null);    // 視線の中心を測る基準
@@ -147,6 +153,27 @@ function App() {
     return () => { alive = false; clearTimeout(timer); };
   }, [t.blinkOn]);
 
+  // ランダム口パク（デモ用 2態 閉⇄中）。後でマイク/TTS の音量駆動に差し替え可
+  useEffect(() => {
+    if (!t.talkOn) { setMouth(0); return; }
+    let alive = true, timer;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    function step() {
+      if (!alive) return;
+      if (Math.random() < 0.18) {
+        setMouth(0); timer = setTimeout(step, rand(500, 1300));
+      } else {
+        setMouth(1);
+        timer = setTimeout(() => {
+          if (!alive) return;
+          setMouth(0); timer = setTimeout(step, rand(90, 200));
+        }, rand(160, 360));
+      }
+    }
+    step();
+    return () => { alive = false; clearTimeout(timer); setMouth(0); };
+  }, [t.talkOn]);
+
   const dark = t.bgColor === '#2B2926';
   const inkColor = dark ? 'rgba(255,248,238,0.85)' : 'rgba(60,48,38,0.82)';
   const subColor = dark ? 'rgba(255,248,238,0.45)' : 'rgba(60,48,38,0.45)';
@@ -169,6 +196,23 @@ function App() {
   };
 
   const renderImg = (ly) => {
+    // 口: 閉口/中口を全画布同座標で重ね、口パク state で opacity crossfade
+    // （head グループ内なので首かしげ・呼吸・体ゆれに自然に追従する）
+    if (ly.id === 'mouth') {
+      const fill = { position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' };
+      return (
+        <React.Fragment key={ly.id}>
+          <img src={layerConfig.src('mouth')} alt="" draggable="false"
+            style={{ ...fill, opacity: mouth === 0 ? 1 : 0, transition: 'opacity 70ms linear' }}
+            onError={(e) => { e.currentTarget.style.opacity = 0; }}></img>
+          {Object.entries(MOUTH_LAYER).map(([v, file]) => (
+            <img key={file} src={layerConfig.src(file)} alt="" draggable="false"
+              style={{ ...fill, opacity: mouth === Number(v) ? 1 : 0, transition: 'opacity 70ms linear' }}
+              onError={(e) => { e.currentTarget.style.opacity = 0; }}></img>
+          ))}
+        </React.Fragment>
+      );
+    }
     const style = {
       position: 'absolute', inset: 0, width: '100%', height: '100%',
       pointerEvents: 'none',
@@ -261,6 +305,7 @@ function MotionPanel({ t, setTweak, open, setOpen, colors }) {
   const MOTIONS = [
     { key: 'eye',     label: '看向光标', amp: ['eyeAmp', 0, 10, 0.5, ''] },
     { key: 'blink',   label: '眨眼' },
+    { key: 'talk',    label: '随机口型' },
     { key: 'brow',    label: '挑眉',     amp: ['browAmp', 0, 3, 0.1, ''],  dur: ['browDur', 3, 12, 0.5] },
     { key: 'hair',    label: '头发摆动', amp: ['hairAmp', 0, 6, 0.2, '°'], dur: ['hairDur', 1.5, 8, 0.1] },
     { key: 'tilt',    label: '歪头',     amp: ['tiltAmp', 0, 6, 0.2, '°'], dur: ['tiltDur', 2, 9, 0.1] },
