@@ -20,9 +20,11 @@ const LIVE_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const BG_OPTIONS = ['#FFF8EE', '#FDEFEF', '#EEF4FB', '#2B2926'];
 
-// 口型レイヤー: 閉口=既存 mouth.webp、中口=mouth_mid.webp（全画布同座標）
-// ※開口(C)を拆いたら { 1:'mouth_mid', 2:'mouth_open' } に増やすだけ
-const MOUTH_LAYER = { 1: 'mouth_mid' };
+// 口型: 閉口 mouth.webp を底に、中口 mouth_mid.webp を scaleY で連続的に開閉する。
+// 開口度 --mouth-open(0..1) を rAF で平滑駆動 ＝ 離散切替でなく連続変形（Live2D の
+// 口開閉パラメータの簡易版）。支点を口の上端に置き、下方向へ開く。
+const MOUTH_MID = 'mouth_mid';
+const MOUTH_ORIGIN = '48% 49%';
 
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
 
@@ -43,13 +45,14 @@ function App() {
   const [t, setTweak] = useTweaks(LIVE_DEFAULTS);
   const [panelOpen, setPanelOpen] = useState(true);
   const [blink, setBlink] = useState(false);
-  const [mouth, setMouth] = useState(0); // 0 閉 / 1 中
 
-  const stageRef = useRef(null);   // CSS変数(--gaze-x/y)を流す先
+  const stageRef = useRef(null);   // CSS変数(--gaze-x/y, --mouth-open)を流す先
   const charRef = useRef(null);    // 視線の中心を測る基準
   const gazeBase = useRef({ x: 0, y: 0 });  // マウス由来
   const gazeSac = useRef({ x: 0, y: 0 });   // サッケード(瞳の揺らぎ)
   const gazeCur = useRef({ x: 0, y: 0 });   // 平滑後の現在値
+  const mouthOpen = useRef(0);    // 開口度: 平滑後の現在値(0..1)
+  const mouthTarget = useRef(0);  // 開口度: 目標値（口パク/音量がここに書く）
   const tRef = useRef(t);
   tRef.current = t;
 
@@ -80,10 +83,13 @@ function App() {
       const dy = on ? clamp(gazeBase.current.y + gazeSac.current.y, -1, 1) : 0;
       gazeCur.current.x += (dx - gazeCur.current.x) * SMOOTH;
       gazeCur.current.y += (dy - gazeCur.current.y) * SMOOTH;
+      // 口の開口度を目標値へ平滑補間（説話/口パクの連続的な開閉）
+      mouthOpen.current += (mouthTarget.current - mouthOpen.current) * 0.35;
       const el = stageRef.current;
       if (el) {
         el.style.setProperty('--gaze-x', gazeCur.current.x.toFixed(4));
         el.style.setProperty('--gaze-y', gazeCur.current.y.toFixed(4));
+        el.style.setProperty('--mouth-open', mouthOpen.current.toFixed(4));
       }
       raf = requestAnimationFrame(tick);
     }
@@ -153,25 +159,21 @@ function App() {
     return () => { alive = false; clearTimeout(timer); };
   }, [t.blinkOn]);
 
-  // ランダム口パク（デモ用 2態 閉⇄中）。後でマイク/TTS の音量駆動に差し替え可
+  // ランダム口パク（デモ用）。開口度の「目標値」を小刻みに更新するだけ。
+  // 実際の開閉は rAF が目標へ連続補間するので、切替ではなく滑らかに動く。
+  // 後でマイク/TTS の音量を mouthTarget に流せば「喋りに合わせて」連続開閉できる。
   useEffect(() => {
-    if (!t.talkOn) { setMouth(0); return; }
+    if (!t.talkOn) { mouthTarget.current = 0; return; }
     let alive = true, timer;
     const rand = (a, b) => a + Math.random() * (b - a);
     function step() {
       if (!alive) return;
-      if (Math.random() < 0.18) {
-        setMouth(0); timer = setTimeout(step, rand(500, 1300));
-      } else {
-        setMouth(1);
-        timer = setTimeout(() => {
-          if (!alive) return;
-          setMouth(0); timer = setTimeout(step, rand(90, 200));
-        }, rand(160, 360));
-      }
+      // たまに閉じて「間」を作り、それ以外は様々な開き具合に
+      mouthTarget.current = Math.random() < 0.15 ? 0 : rand(0.35, 1);
+      timer = setTimeout(step, rand(70, 160));
     }
     step();
-    return () => { alive = false; clearTimeout(timer); setMouth(0); };
+    return () => { alive = false; clearTimeout(timer); mouthTarget.current = 0; };
   }, [t.talkOn]);
 
   const dark = t.bgColor === '#2B2926';
@@ -202,14 +204,13 @@ function App() {
       const fill = { position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' };
       return (
         <React.Fragment key={ly.id}>
-          <img src={layerConfig.src('mouth')} alt="" draggable="false"
-            style={{ ...fill, opacity: mouth === 0 ? 1 : 0, transition: 'opacity 70ms linear' }}
+          {/* 閉口を底に常駐 */}
+          <img src={layerConfig.src('mouth')} alt="" draggable="false" style={fill}
             onError={(e) => { e.currentTarget.style.opacity = 0; }}></img>
-          {Object.entries(MOUTH_LAYER).map(([v, file]) => (
-            <img key={file} src={layerConfig.src(file)} alt="" draggable="false"
-              style={{ ...fill, opacity: mouth === Number(v) ? 1 : 0, transition: 'opacity 70ms linear' }}
-              onError={(e) => { e.currentTarget.style.opacity = 0; }}></img>
-          ))}
+          {/* 中口を上端支点で scaleY 連続開閉（--mouth-open 0..1 を rAF が駆動） */}
+          <img src={layerConfig.src(MOUTH_MID)} alt="" draggable="false"
+            style={{ ...fill, transformOrigin: MOUTH_ORIGIN, transform: 'scaleY(var(--mouth-open, 0))', willChange: 'transform' }}
+            onError={(e) => { e.currentTarget.style.opacity = 0; }}></img>
         </React.Fragment>
       );
     }

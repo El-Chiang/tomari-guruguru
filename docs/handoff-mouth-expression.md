@@ -17,7 +17,8 @@
 - **接法**：`src/oc-mouth.jsx` 已改为**全画布层切换**——在 `mouth` 层 z 位置叠「闭口 `mouth.webp` + 中口 `mouth_mid.webp`」两张全画布同坐标图，按状态 opacity crossfade(70ms)，**对位滑杆已删**（同源同画布天然对齐，免调）。随机口パク改两态（閉⇄中）。开口(C)留了注释位 `MOUTH_LAYER = { 1:'mouth_mid' /*, 2:'mouth_open' */ }`，C 拆好改一行即可。
 - **验证**：dev `/oc-mouth.html`，闭/中全景 + 嘴部特写（4.6×）均确认——中口干净「お」型张口、闭口平嘴线，**同位同源、边缘无缝、无 AI 差分杂边**；mouth 层外围那圈淡 alpha 弥散（实心嘴仅 27×26，外围 548×525 羽化）在脸上**不露馅**。控制台无报错。
 - **已合进 oc-live（同日）**：`src/oc-live.jsx` 在 mouth 层 z 位置叠「闭口 `mouth.webp` + 中口 `mouth_mid.webp`」两张全画布图、opacity crossfade(70ms)，由新增 `mouth` state 驱动；新增「随机口型」动作开关（`talkOn`，默认关，逻辑同 oc-mouth 的两态口パク）到动作控制面板（眨眼↓挑眉↑）。mouth 在 `headPre`/head 组内，**自然跟随歪头/呼吸/体ゆれ/发摆**，无需手动按钮。dev 验证：闭口静默 → 开口パク中口张口(跟头一起动) → 关回闭口，均正常、无报错。`oc-mouth.html` 作为口型单测脚手架保留。
-- **下一步 roadmap**：① C 开口拆好 → 接 `mouth_open.webp` 成三态（改 oc-live/oc-mouth 各一行 `MOUTH_LAYER`）；② `[13] eyewhite` + 闭眼层 → 真眨眼；③ ~~合进 `oc-live`~~ ✅ 已完成；④ 接音量驱动（麦克风/TTS，参考 `src/talk-app.jsx` 的 sheet 版音量→口型）。
+- **口型升级为「连续开口度」（同日，替掉两态 crossfade）**：管理员反馈两态 opacity 切换仍是「换图」、离散。改为**连续开口度参数**：闭口 `mouth.webp` 常驻当底，中口 `mouth_mid.webp` 用 `transform: scaleY(var(--mouth-open))`（支点 `transform-origin:48% 49%` 在嘴上沿）连续开合；`--mouth-open`(0..1) 由 rAF 平滑补间（**并进现有 gaze loop**，SMOOTH 0.35），随机口パク改成小刻度更新 `mouthTarget`（15% 概率闭合、否则 0.35–1，每 70–160ms）→ rAF 连续补间 → 连续起伏。**删掉 `mouth` state 与 `MOUTH_LAYER`**，口型完全脱离 React 重渲染（每帧只改 CSS 变量）。是 Live2D 嘴开合参数的极简版（纯前端、零新素材）。验证：冻结 `scaleY` 0.45/1.0 截图证明中间态连续存在；动态由管理员肉眼确认（注：`preview_eval` 读 CSS 变量恒空=工具上下文问题，非 bug）。**局限**：scaleY 仅纵向缩放近似，嘴角/口内不真变形，要真·形变须 Live2D/mesh。`mouthTarget` 已留作音量驱动接口。`oc-mouth.html` 仍是两态按钮脚手架（未跟进连续化，作单层素材单测用）。
+- **下一步 roadmap**：① C 开口拆好 → 让 `--mouth-open` 0–1 跨「中口→开口」两段接力（或加大开口图）成三段连续；② `[13] eyewhite` + 闭眼层 → 真眨眼；③ ~~合进 `oc-live`~~ ✅；④ **接音量驱动**（麦克风/TTS 音量 → `mouthTarget`，参考 `src/talk-app.jsx` 的 sheet 版音量→口型）。
 
 ---
 
