@@ -15,6 +15,7 @@ export default defineConfig(({ command }) => ({
         main: resolve(import.meta.dirname, 'index.html'),
         guruguru: resolve(import.meta.dirname, 'guruguru.html'),
         talk: resolve(import.meta.dirname, 'talk.html'),
+        oclive: resolve(import.meta.dirname, 'oc-live.html'),
       },
     },
   },

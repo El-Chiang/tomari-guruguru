@@ -3,7 +3,7 @@
 
 export default {
   // スライス画像のベースパス（public/ からの相対パス）
-  basePath: 'slices2',
+  basePath: 'slices_oc',
 
   // 画像フォーマット（webp / png）
   ext: 'webp',
