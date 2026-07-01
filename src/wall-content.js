@@ -36,8 +36,38 @@ export default {
     },
   ],
 
-  // [フェーズ2] 散らばる4枚のカード：タイムラインの他の作品
-  scatterGames: [],
+  // [フェーズ2] 横スクロールのタイムライン帯：直近の他の作品
+  scatterGames: [
+    {
+      appid: 2445690,
+      name: '失落城堡2',
+      cover: 'wall/covers/2445690_header.jpg',
+      hours: 40.4,
+      url: 'https://store.steampowered.com/app/2445690',
+    },
+    {
+      appid: 2863680,
+      name: '归零巡礼：亡谍镇魂曲',
+      cover: 'wall/covers/2863680_hero.jpg',
+      hours: 36.5,
+      url: 'https://store.steampowered.com/app/2863680',
+    },
+    {
+      appid: 3357650,
+      name: 'PRAGMATA',
+      cover: 'wall/covers/3357650_hero.jpg',
+      hours: 1.9,
+      url: 'https://store.steampowered.com/app/3357650',
+    },
+    {
+      appid: 3974650,
+      name: '鬼武者 Way of the Sword DEMO',
+      // ローカルに保存し損ねた分だけ Steam CDN を直参照(最近在玩.md に記録あり)
+      cover: 'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3974650/67c0395623cb98c44b829bf62a570b0553066ac5/header.jpg',
+      hours: 1.1,
+      url: 'https://store.steampowered.com/app/3974650',
+    },
+  ],
 
   // [フェーズ3] ポスター安利：特にオススメの1本
   posterGame: null,

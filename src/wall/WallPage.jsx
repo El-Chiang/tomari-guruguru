@@ -4,16 +4,19 @@ import WallBackground from './WallBackground';
 import WallFrame from './WallFrame';
 import WallFrameText from './WallFrameText';
 import ShelfSection from './ShelfSection';
+import TimelineSection from './TimelineSection';
 import wallContent from '../wall-content';
 
 // 100vh に収まる一画面レイアウト（ページ全体はスクロールさせない）。
 // 左: OC の額装ポートレート + 自己紹介。右: ゲームの展示エリア（フェーズ毎に追加）。
+// 下: 収まりきらない分は横スクロールの帯(TimelineSection)に逃がす
+// —— ページ自体を縦スクロールさせないための逃し場。
 export default function WallPage({ tweaks }) {
   return (
     <div style={{
       position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden',
       background: '#B3B3B3', boxSizing: 'border-box',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 44,
       fontFamily: "'IBM Plex Sans SC', sans-serif",
     }}>
       {/* <WallNav /> */}
@@ -28,6 +31,8 @@ export default function WallPage({ tweaks }) {
 
         <ShelfSection games={wallContent.shelfGames} />
       </div>
+
+      <TimelineSection games={wallContent.scatterGames} />
     </div>
   );
 }
