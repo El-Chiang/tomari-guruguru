@@ -26,6 +26,12 @@ export default function WallFrame({ tweaks }) {
         overflow: 'hidden',
       }}
     >
+      {/* 額の内張り: くしゃっとした紙テクスチャ(Figma: paper texture, node 12:3062)。
+          壁(平らな紙目)と質感を変えて、額の中だけ貼り込んだ台紙に見せる */}
+      <img
+        src="wall/paper-crumpled.webp" alt=""
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+      />
       <OcPortrait
         tweaks={tweaks}
         size={`${renderSize}px`}

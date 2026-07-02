@@ -12,7 +12,13 @@ const { useRef, useState, useEffect, useCallback } = React;
 // 横幅が収まらないときはこのストリップだけが横スクロールする(端は fade)。
 
 // cart-raw.png(320x460) 上のラベル窓実測値: x 22..298, y 26..364
+// (cart-red-raw.png も同版式なので窓座標は共通)
 const CART = { width: 66, height: 95 };
+// カセット殻のバリエーション: 黒=Steam(既定)、赤=Nintendo(Figma node 1:204)
+const SHELLS = {
+  default: 'wall/carts/cart-shell.png',
+  red: 'wall/carts/cart-shell-red.png',
+};
 const LABEL = {
   left: (22 / 320) * 100 + '%',
   top: (26 / 460) * 100 + '%',
@@ -41,7 +47,7 @@ function Cartridge({ game, order }) {
           }}
         />
         <img
-          src="wall/carts/cart-shell.png" alt=""
+          src={SHELLS[game.shell] ?? SHELLS.default} alt=""
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         />
         <div className="wall-cart-tip" style={{

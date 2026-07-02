@@ -36,15 +36,18 @@ export default function WallPage({ tweaks }) {
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 80 }}>
         <div style={{ position: 'relative', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          {/* 額縁の上にとまる鳩(Figma node 1:140)。額の白フチに足が乗る位置 */}
-          <img
-            src="wall/carts/pigeon.png" alt=""
-            style={{
-              position: 'absolute', top: -44, left: 26, width: 62,
-              pointerEvents: 'none', zIndex: 1,
-            }}
-          />
-          <WallFrame tweaks={tweaks} />
+          {/* 額はすこし傾けて掛ける(鳩ごと、鳩のいる左肩が上がる向き)。紹介文は水平のまま */}
+          <div style={{ position: 'relative', transform: 'rotate(2.4deg)', transformOrigin: '50% 60%' }}>
+            {/* 額縁の上にとまる鳩(Figma node 1:140)。額の白フチに足が乗る位置 */}
+            <img
+              src="wall/carts/pigeon.png" alt=""
+              style={{
+                position: 'absolute', top: -44, left: 26, width: 62,
+                pointerEvents: 'none', zIndex: 1,
+              }}
+            />
+            <WallFrame tweaks={tweaks} />
+          </div>
           <WallFrameText content={wallContent.profile} />
         </div>
 

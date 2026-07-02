@@ -13,7 +13,7 @@ const steamUrl = (appid) => `https://store.steampowered.com/app/${appid}`;
 
 export default {
   profile: {
-    name: 'トマリ',
+    name: 'yiyi',
     tagline: '私はもう十分可愛いもの、これ以上は世界が危険よ',
     bio: 'マウスを動かすと こっちを見る。放っておくと ひとりで過ごすよ。',
     links: [
@@ -60,6 +60,8 @@ export default {
       games: [
         { appid: 2057760, name: '奥秘 消退', cover: 'wall/covers/2057760_vertical.jpg', hours: 24.7, url: steamUrl(2057760) },
         { appid: 686060, name: '喵喵的结合', cover: 'wall/covers/686060_vertical.jpg', url: steamUrl(686060) },
+        // Nintendo Switch 2 なので赤カセット。カバーは gamekult の紹介記事より
+        { name: 'Pokémon Pokopia', cover: 'wall/covers/pokopia.png', shell: 'red', note: 'Switch 2', url: 'https://www.nintendo.com/us/store/products/pokemon-pokopia-switch-2/' },
       ],
     },
     {
