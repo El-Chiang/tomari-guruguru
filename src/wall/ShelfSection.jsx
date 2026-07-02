@@ -3,6 +3,7 @@ import React from 'react';
 const { useState } = React;
 
 import asset from './wall-asset';
+import useEdgeFade, { edgeFadeMask } from './useEdgeFade';
 
 // 「いま遊んでいる」木棚。Figma の ALBUM(node 1:145) / WOOD SHELF(node 1:149) の
 // レシピを踏襲: 両脇のぼかし影で奥行きを出し、下端の暗いビネット(darken)で棚に
@@ -93,24 +94,12 @@ function Shelf({ width }) {
   );
 }
 
-export default function ShelfSection({ games }) {
-  if (!games || !games.length) return null;
+// 1段分: カバー並び + 棚板 + キャプション。
+function ShelfRow({ games }) {
   const itemWidth = COVER.width + SHADOW_W * 2;
   const rowWidth = itemWidth * games.length + GAP * (games.length - 1);
   return (
-    <div style={{ position: 'relative', flex: '0 0 auto' }}>
-      <p style={{
-        margin: '0 0 4px', fontFamily: "'Fraunces', serif", fontWeight: 600,
-        fontSize: 20, color: 'rgba(0,0,0,0.8)',
-      }}>
-        最近遊んでいる
-      </p>
-      <p style={{
-        margin: '0 0 18px', fontFamily: "'IBM Plex Sans SC', sans-serif",
-        fontSize: 10, color: 'rgba(0,0,0,0.4)',
-      }}>
-        Now Playing · 2026.06–07
-      </p>
+    <div>
       <div style={{ display: 'flex', gap: GAP }}>
         {games.map((g) => <AlbumCover key={g.appid ?? g.name} game={g} />)}
       </div>
@@ -130,7 +119,52 @@ export default function ShelfSection({ games }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// perRow > 0 なら段組みに分割（モバイルは 2本/段 の想定。カバーサイズは
+// 縮めず、棚を増やして受ける）。0/未指定は従来どおり1段に全部並べる。
+// 段の幅がコンテナに収まらないとき(中間幅のデスクトップ)は、カセット帯と
+// 同じ「端 fade + 横スクロール」で受ける。
+export default function ShelfSection({ games, perRow = 0 }) {
+  const { ref, fade, update } = useEdgeFade();
+  if (!games || !games.length) return null;
+  const rows = [];
+  const per = perRow > 0 ? perRow : games.length;
+  for (let i = 0; i < games.length; i += per) rows.push(games.slice(i, i + per));
+  return (
+    <div style={{ position: 'relative', flex: '0 0 auto' }}>
+      <p style={{
+        margin: '0 0 4px', fontFamily: "'Fraunces', serif", fontWeight: 600,
+        fontSize: 20, color: 'rgba(0,0,0,0.8)',
+      }}>
+        最近遊んでいる
+      </p>
+      <p style={{
+        margin: '0 0 8px', fontFamily: "'IBM Plex Sans SC', sans-serif",
+        fontSize: 10, color: 'rgba(0,0,0,0.4)',
+      }}>
+        Now Playing · 2026.06–07
+      </p>
+      <div
+        ref={ref} className="wall-shelf-scroll" onScroll={update}
+        style={{
+          overflowX: 'auto', overflowY: 'hidden',
+          WebkitMaskImage: edgeFadeMask(fade),
+          maskImage: edgeFadeMask(fade),
+        }}
+      >
+        {/* paddingTop は hover 時の持ち上がり(-8px)、paddingBottom は棚板の
+            落ち影のはみ出し分。inline-flex で内容幅=最大内容幅にして横スクロール可能に */}
+        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: 30, paddingTop: 10, paddingBottom: 24 }}>
+          {rows.map((row, i) => <ShelfRow key={i} games={row} />)}
+        </div>
+      </div>
       <style>{`
+        .wall-shelf-scroll { scrollbar-width: none; }
+        .wall-shelf-scroll::-webkit-scrollbar { display: none; }
+
         .wall-album .wall-album-jacket { transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 260ms ease; }
         .wall-album:hover .wall-album-jacket {
           transform: translateY(-8px);

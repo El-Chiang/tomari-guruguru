@@ -8,12 +8,14 @@ import asset from './wall-asset';
 // クロップ済み(現 1494x952)。その分だけ top inset を浅くしてある:
 //   top = -(200-92)/644 = -16.77%, bottom は従来どおり -200/644 = -31.06%。
 // 1画面レイアウトに合わせて、コンテナ自体はページ中央に配置する。
+// fixed=true（モバイルの縦スクロールページ）ではビューポート中央に固定し、
+// スクロールしても壁の照明が動かないようにする。
 const BOX = { width: 1094, height: 644 };
 
-export default function WallBackground() {
+export default function WallBackground({ fixed = false }) {
   return (
     <div style={{
-      position: 'absolute', left: '50%', top: '50%',
+      position: fixed ? 'fixed' : 'absolute', left: '50%', top: '50%',
       width: BOX.width, height: BOX.height,
       transform: 'translate(-50%, -50%)',
       pointerEvents: 'none',

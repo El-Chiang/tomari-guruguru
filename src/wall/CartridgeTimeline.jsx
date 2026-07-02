@@ -1,8 +1,7 @@
 import React from 'react';
 
-const { useRef, useState, useEffect, useCallback } = React;
-
 import asset from './wall-asset';
+import useEdgeFade, { edgeFadeMask } from './useEdgeFade';
 
 // カセット時間軸。Figma の GAME CARD(node 1:201) のカセット写真を流用 ——
 // ラベル窓(元は Xenogears のアート部分)をピクセル実測して透過で打ち抜いた
@@ -95,41 +94,6 @@ function MonthCluster({ month, games, startOrder }) {
   );
 }
 
-// はみ出しがある側だけ端を fade させる。縦ホイールは横スクロールに変換
-// （帯の上にポインタがあるときだけ）。
-function useEdgeFade() {
-  const ref = useRef(null);
-  const [fade, setFade] = useState({ left: false, right: false });
-  const update = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    setFade((prev) => {
-      const next = { left: el.scrollLeft > 4, right: el.scrollLeft < max - 4 };
-      return (next.left === prev.left && next.right === prev.right) ? prev : next;
-    });
-  }, []);
-  useEffect(() => {
-    update();
-    const el = ref.current;
-    if (!el) return undefined;
-    const onWheel = (e) => {
-      if (el.scrollWidth <= el.clientWidth) return;
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        el.scrollLeft += e.deltaY;
-        e.preventDefault();
-      }
-    };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('resize', update);
-    return () => {
-      el.removeEventListener('wheel', onWheel);
-      window.removeEventListener('resize', update);
-    };
-  }, [update]);
-  return { ref, fade, update };
-}
-
 export default function CartridgeTimeline({ months }) {
   const { ref, fade, update } = useEdgeFade();
   if (!months || !months.length) return null;
@@ -154,14 +118,14 @@ export default function CartridgeTimeline({ months }) {
       <p style={{
         margin: 0, fontFamily: font, fontSize: 10, color: 'rgba(0,0,0,0.4)',
       }}>
-        今年遊んだゲームのカセット棚 · hoverで詳細
+        今年遊んだゲームのカセット棚<span className="wall-tl-hint"> · hoverで詳細</span>
       </p>
       <div
         ref={ref} className="wall-tape-scroll" onScroll={update}
         style={{
           overflowX: 'auto', overflowY: 'hidden',
-          WebkitMaskImage: `linear-gradient(to right, ${fade.left ? 'transparent 0, black 48px' : 'black 0'}, black calc(100% - 48px), ${fade.right ? 'transparent' : 'black'} 100%)`,
-          maskImage: `linear-gradient(to right, ${fade.left ? 'transparent 0, black 48px' : 'black 0'}, black calc(100% - 48px), ${fade.right ? 'transparent' : 'black'} 100%)`,
+          WebkitMaskImage: edgeFadeMask(fade),
+          maskImage: edgeFadeMask(fade),
         }}
       >
         <div style={{
@@ -180,6 +144,11 @@ export default function CartridgeTimeline({ months }) {
         /* スクロールバーは出さない(はみ出しは端の fade とホイール横スクロールで伝える) */
         .wall-tape-scroll { scrollbar-width: none; }
         .wall-tape-scroll::-webkit-scrollbar { display: none; }
+
+        /* hover が無いデバイス(タッチ)では hover 前提の説明を出さない */
+        @media (hover: none) {
+          .wall-tl-hint { display: none; }
+        }
 
         .wall-cart { transition: transform 240ms cubic-bezier(0.34, 1.45, 0.64, 1), filter 240ms ease; }
         .wall-cart-tip { opacity: 0; transition: opacity 160ms ease 60ms; }

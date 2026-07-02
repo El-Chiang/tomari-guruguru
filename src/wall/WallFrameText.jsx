@@ -3,11 +3,12 @@ import asset from './wall-asset';
 
 // 元 ART TEXT（タイトル＋説明＋区切り線＋リンク行）を自己紹介用に転用。
 // WallFrame の直下に流し込むので絶対配置はせず、幅だけ額に揃える。
+// 狭い画面では maxWidth で親のパディング内に収める。
 const WIDTH = 340;
 
 export default function WallFrameText({ content }) {
   return (
-    <div style={{ width: WIDTH, marginTop: 16 }}>
+    <div style={{ width: WIDTH, maxWidth: '100%', marginTop: 16 }}>
       <p style={{ margin: 0, fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 24, lineHeight: 1.1, color: 'rgba(0,0,0,0.85)' }}>
         {content.name}
       </p>
