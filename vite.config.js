@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/tomari-guruguru/' : '/',
+  // GitHub Pages はリポジトリ名のサブパス配信なので build 時のみ base を付ける。
+  // Vercel はルート配信（ビルド環境に VERCEL=1 が立つ）なので '/' のまま。
+  base: !process.env.VERCEL && command === 'build' ? '/tomari-guruguru/' : '/',
   plugins: [react()],
   server: {
     host: '127.0.0.1',
