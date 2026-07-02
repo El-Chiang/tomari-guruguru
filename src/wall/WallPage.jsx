@@ -4,35 +4,32 @@ import WallBackground from './WallBackground';
 import WallFrame from './WallFrame';
 import WallFrameText from './WallFrameText';
 import ShelfSection from './ShelfSection';
-import TimelineSection from './TimelineSection';
 import wallContent from '../wall-content';
 
 // 100vh に収まる一画面レイアウト（ページ全体はスクロールさせない）。
-// 左: OC の額装ポートレート + 自己紹介。右: ゲームの展示エリア（フェーズ毎に追加）。
-// 下: 収まりきらない分は横スクロールの帯(TimelineSection)に逃がす
-// —— ページ自体を縦スクロールさせないための逃し場。
+// 左: OC の額装ポートレート + 自己紹介。右: 月ごとの棚(ShelfSection) —— 収まり
+// きらない分はこのパネル自体が縦スクロールする(ページ自体は縦スクロールさせない
+// ための逃し場)。
 export default function WallPage({ tweaks }) {
   return (
     <div style={{
       position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden',
-      background: '#B3B3B3', boxSizing: 'border-box',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 44,
+      background: '#B3B3B3', boxSizing: 'border-box', paddingTop: 64,
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       fontFamily: "'IBM Plex Sans SC', sans-serif",
     }}>
       {/* <WallNav /> */}
       <WallBackground />
 
-      {/* 額と「最近よく遊んでいる」の上端を揃える。ブロック全体は画面中央に来る */}
+      {/* 額と「最近遊んだもの」の上端を揃える。ブロック全体は画面中央に来る */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 72 }}>
         <div style={{ position: 'relative', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <WallFrame tweaks={tweaks} />
           <WallFrameText content={wallContent.profile} />
         </div>
 
-        <ShelfSection games={wallContent.shelfGames} />
+        <ShelfSection months={wallContent.timeline} />
       </div>
-
-      <TimelineSection games={wallContent.scatterGames} />
     </div>
   );
 }
