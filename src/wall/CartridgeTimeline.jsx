@@ -175,10 +175,9 @@ export default function CartridgeTimeline({ months }) {
         </div>
       </div>
       <style>{`
-        .wall-tape-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.2) transparent; }
-        .wall-tape-scroll::-webkit-scrollbar { height: 6px; }
-        .wall-tape-scroll::-webkit-scrollbar-track { background: transparent; }
-        .wall-tape-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 999px; }
+        /* スクロールバーは出さない(はみ出しは端の fade とホイール横スクロールで伝える) */
+        .wall-tape-scroll { scrollbar-width: none; }
+        .wall-tape-scroll::-webkit-scrollbar { display: none; }
 
         .wall-cart { transition: transform 240ms cubic-bezier(0.34, 1.45, 0.64, 1), filter 240ms ease; }
         .wall-cart-tip { opacity: 0; transition: opacity 160ms ease 60ms; }
