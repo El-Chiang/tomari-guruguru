@@ -1,8 +1,11 @@
 import React from 'react';
 
 // SHINY BG — 壁に落ちる柔らかい光暈。Figma のエフェクトをそのまま焼き込んだ
-// 1494x1044 の PNG を、元のコンテナ(1094x644)に対して同じ inset で配置する
-// （実測: -31.06% -18.28% でぴったり 1494x1044 になることを確認済み）。
+// PNG を、元のコンテナ(1094x644)に対して inset で配置する。
+// 元の書き出し(1494x1044, inset -31.06% -18.28%)には Figma の黒い NAV バーが
+// 上端に焼き込まれていて、背の高いビューポートで露出したため上 92px を
+// クロップ済み(現 1494x952)。その分だけ top inset を浅くしてある:
+//   top = -(200-92)/644 = -16.77%, bottom は従来どおり -200/644 = -31.06%。
 // 1画面レイアウトに合わせて、コンテナ自体はページ中央に配置する。
 const BOX = { width: 1094, height: 644 };
 
@@ -14,7 +17,7 @@ export default function WallBackground() {
       transform: 'translate(-50%, -50%)',
       pointerEvents: 'none',
     }}>
-      <div style={{ position: 'absolute', inset: '-31.06% -18.28%' }}>
+      <div style={{ position: 'absolute', inset: '-16.77% -18.28% -31.06%' }}>
         <img src="wall/bg-shine.png" alt="" style={{ display: 'block', width: '100%', height: '100%' }} />
       </div>
     </div>
