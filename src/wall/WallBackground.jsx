@@ -1,4 +1,5 @@
 import React from 'react';
+import asset from './wall-asset';
 
 // SHINY BG — 壁に落ちる柔らかい光暈。Figma のエフェクトをそのまま焼き込んだ
 // PNG を、元のコンテナ(1094x644)に対して inset で配置する。
@@ -18,7 +19,7 @@ export default function WallBackground() {
       pointerEvents: 'none',
     }}>
       <div style={{ position: 'absolute', inset: '-16.77% -18.28% -31.06%' }}>
-        <img src="wall/bg-shine.png" alt="" style={{ display: 'block', width: '100%', height: '100%' }} />
+        <img src={asset('wall/bg-shine.png')} alt="" style={{ display: 'block', width: '100%', height: '100%' }} />
       </div>
     </div>
   );

@@ -2,6 +2,8 @@ import React from 'react';
 
 const { useState } = React;
 
+import asset from './wall-asset';
+
 // 「いま遊んでいる」木棚。Figma の ALBUM(node 1:145) / WOOD SHELF(node 1:149) の
 // レシピを踏襲: 両脇のぼかし影で奥行きを出し、下端の暗いビネット(darken)で棚に
 // 接地させ、棚板は6層 box-shadow の落ち影で浮かせる。
@@ -21,7 +23,7 @@ function AlbumShadow({ side }) {
       flex: '0 0 auto', width: SHADOW_W, height: COVER.height,
       transform: side === 'left' ? 'scaleX(-1)' : undefined,
     }}>
-      <img src="wall/album-shadow-right.svg" alt="" style={{ display: 'block', width: '100%', height: '100%' }} />
+      <img src={asset('wall/album-shadow-right.svg')} alt="" style={{ display: 'block', width: '100%', height: '100%' }} />
     </div>
   );
 }
@@ -46,7 +48,7 @@ function AlbumArt({ game }) {
   }
   return (
     <img
-      src={game.cover} alt={game.name} onError={() => setBroken(true)}
+      src={asset(game.cover)} alt={game.name} onError={() => setBroken(true)}
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
     />
   );
@@ -86,7 +88,7 @@ function Shelf({ width }) {
       position: 'relative', width, height: 15, marginTop: -6, borderRadius: 2, overflow: 'hidden',
       boxShadow: '0px 24px 30px 0px rgba(0,0,0,0.5), 0px 16px 18px 0px rgba(0,0,0,0.4), 0px 9px 10px 0px rgba(0,0,0,0.33), 0px 4.5px 5px 0px rgba(0,0,0,0.26), 0px 2px 2.5px 0px rgba(0,0,0,0.2), 0px 0.5px 1.2px 0px rgba(0,0,0,0.16)',
     }}>
-      <img src="wall/shelf-wood.webp" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'bottom' }} />
+      <img src={asset('wall/shelf-wood.webp')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'bottom' }} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import OcPortrait from '../oc-portrait';
+import asset from './wall-asset';
 
 // 元 KATZE の画框位。猫の素描の代わりに、生きている OC を額装する。
 // キャラは額いっぱいに詰めず、一回り小さく中央に置く（額の背景＝壁の光暈が
@@ -29,7 +30,7 @@ export default function WallFrame({ tweaks }) {
       {/* 額の内張り: くしゃっとした紙テクスチャ(Figma: paper texture, node 12:3062)。
           壁(平らな紙目)と質感を変えて、額の中だけ貼り込んだ台紙に見せる */}
       <img
-        src="wall/paper-crumpled.webp" alt=""
+        src={asset('wall/paper-crumpled.webp')} alt=""
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
       />
       <OcPortrait

@@ -6,6 +6,7 @@ import WallFrameText from './WallFrameText';
 import ShelfSection from './ShelfSection';
 import CartridgeTimeline from './CartridgeTimeline';
 import wallContent from '../wall-content';
+import asset from './wall-asset';
 
 // 100vh に収まる一画面レイアウト（ページ全体はスクロールさせない）。
 // 左: OC の額装ポートレート + 自己紹介（額の上には Figma の鳩がとまっている）。
@@ -29,7 +30,7 @@ export default function WallPage({ tweaks }) {
           —— 1画面ページなので cover 1枚で全面を覆う */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'url(wall/paper-texture.webp)',
+        backgroundImage: `url(${asset('wall/paper-texture.webp')})`,
         backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center',
         mixBlendMode: 'multiply', opacity: 0.5,
       }} />
@@ -40,7 +41,7 @@ export default function WallPage({ tweaks }) {
           <div style={{ position: 'relative', transform: 'rotate(2.4deg)', transformOrigin: '50% 60%' }}>
             {/* 額縁の上にとまる鳩(Figma node 1:140)。額の白フチに足が乗る位置 */}
             <img
-              src="wall/carts/pigeon.png" alt=""
+              src={asset('wall/carts/pigeon.png')} alt=""
               style={{
                 position: 'absolute', top: -44, left: 26, width: 62,
                 pointerEvents: 'none', zIndex: 1,

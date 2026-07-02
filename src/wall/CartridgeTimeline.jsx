@@ -2,6 +2,8 @@ import React from 'react';
 
 const { useRef, useState, useEffect, useCallback } = React;
 
+import asset from './wall-asset';
+
 // カセット時間軸。Figma の GAME CARD(node 1:201) のカセット写真を流用 ——
 // ラベル窓(元は Xenogears のアート部分)をピクセル実測して透過で打ち抜いた
 // cart-shell.png を上に重ね、下層の Steam カバーが窓から覗く構造。
@@ -40,14 +42,14 @@ function Cartridge({ game, order }) {
         filter: 'drop-shadow(0px 3px 4px rgba(0,0,0,0.35))',
       }}>
         <img
-          src={game.cover} alt={game.name}
+          src={asset(game.cover)} alt={game.name}
           style={{
             position: 'absolute', left: LABEL.left, top: LABEL.top,
             width: LABEL.width, height: LABEL.height, objectFit: 'cover',
           }}
         />
         <img
-          src={SHELLS[game.shell] ?? SHELLS.default} alt=""
+          src={asset(SHELLS[game.shell] ?? SHELLS.default)} alt=""
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         />
         <div className="wall-cart-tip" style={{

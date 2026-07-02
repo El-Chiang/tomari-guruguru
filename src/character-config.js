@@ -2,8 +2,9 @@
 // 新キャラ差し替え時はこのファイルを書き換えるだけ
 
 export default {
-  // スライス画像のベースパス（public/ からの相対パス）
-  basePath: 'slices_oc',
+  // スライス画像のベースパス（画眉 CDN にアップロード済み: sheet A〜F 全部、実測確認済み）
+  // ローカル相対パスに戻す場合は 'slices_oc' に変更
+  basePath: 'https://mdn.alipayobjects.com/huamei_toj2z8/uri/file/as/tomari-guruguru/slices_oc',
 
   // 画像フォーマット（webp / png）
   ext: 'webp',
