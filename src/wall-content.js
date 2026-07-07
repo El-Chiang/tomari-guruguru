@@ -17,7 +17,8 @@ export default {
     tagline: '私はもう十分可愛いもの、これ以上は世界が危険よ',
     bio: 'マウスを動かすと こっちを見る。放っておくと ひとりで過ごすよ。',
     links: [
-      { label: 'Steam ↗', url: 'https://steamcommunity.com/profiles/76561198325807650' },
+      // Steam プロフィールへのリンクは一旦非表示（あとで戻すかも）
+      // { label: 'Steam ↗', url: 'https://steamcommunity.com/profiles/76561198325807650' },
     ],
     steamUrl: 'https://steamcommunity.com/profiles/76561198325807650',
   },
