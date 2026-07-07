@@ -16,9 +16,11 @@ import useEdgeFade, { edgeFadeMask } from './useEdgeFade';
 // (cart-red-raw.png も同版式なので窓座標は共通)
 const CART = { width: 66, height: 95 };
 // カセット殻のバリエーション: 黒=Steam(既定)、赤=Nintendo(Figma node 1:204)
+// ※ -signed = 底部銘板(DF-GAME-PS / DF-GAME-STEAM)入りのオリジナル版。
+//   CDN の alias は上書き不可なので、涂り消し版から戻す際に別名で再アップした。
 const SHELLS = {
-  default: 'wall/carts/cart-shell.png',
-  red: 'wall/carts/cart-shell-red.png',
+  default: 'wall/carts/cart-shell-signed.png',
+  red: 'wall/carts/cart-shell-red-signed.png',
 };
 const LABEL = {
   left: (22 / 320) * 100 + '%',
