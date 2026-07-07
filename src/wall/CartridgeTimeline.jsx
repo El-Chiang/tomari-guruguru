@@ -1,5 +1,7 @@
 import React from 'react';
 
+const { useState, useCallback, useRef, useLayoutEffect } = React;
+
 import asset from './wall-asset';
 import useEdgeFade, { edgeFadeMask } from './useEdgeFade';
 
@@ -33,15 +35,20 @@ const ROTATIONS = [-4, 3, -2, 4.5, -3.5, 2.5];
 
 const font = "'IBM Plex Sans SC', sans-serif";
 
-function Cartridge({ game, order }) {
+function Cartridge({ game, order, onHover }) {
   const rot = ROTATIONS[order % ROTATIONS.length];
   const body = (
     <div className="wall-cart-drop" style={{ animationDelay: `${order * 90}ms` }}>
-      <div className="wall-cart" style={{
-        position: 'relative', width: CART.width, height: CART.height,
-        '--rot': `${rot}deg`, transform: `rotate(${rot}deg)`,
-        filter: 'drop-shadow(0px 3px 4px rgba(0,0,0,0.35))',
-      }}>
+      <div
+        className="wall-cart"
+        onPointerEnter={(e) => onHover(game, e.currentTarget)}
+        onPointerLeave={() => onHover(null)}
+        style={{
+          position: 'relative', width: CART.width, height: CART.height,
+          '--rot': `${rot}deg`, transform: `rotate(${rot}deg)`,
+          filter: 'drop-shadow(0px 3px 4px rgba(0,0,0,0.35))',
+        }}
+      >
         <img
           src={asset(game.cover)} alt={game.name}
           style={{
@@ -53,20 +60,6 @@ function Cartridge({ game, order }) {
           src={asset(SHELLS[game.shell] ?? SHELLS.default)} alt=""
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         />
-        <div className="wall-cart-tip" style={{
-          position: 'absolute', bottom: '100%', left: '50%',
-          transform: 'translate(-50%, -6px)',
-          background: 'rgba(28,28,28,0.92)', color: '#eee', borderRadius: 4,
-          padding: '4px 8px', whiteSpace: 'nowrap', pointerEvents: 'none',
-          fontFamily: font, fontSize: 10, lineHeight: 1.5, textAlign: 'center',
-        }}>
-          <span style={{ fontWeight: 500 }}>{game.name}</span>
-          {(game.hours != null || game.note) && (
-            <span style={{ color: 'rgba(255,255,255,0.55)', marginLeft: 6 }}>
-              {game.hours != null ? `${game.hours}h` : game.note}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -78,11 +71,43 @@ function Cartridge({ game, order }) {
   );
 }
 
-function MonthCluster({ month, games, startOrder }) {
+// ツールチップ。カセットの中に置くとスクロール容器の overflow/mask に
+// 切られる(帯の両端で見切れるバグ)ので、fixed でビューポート基準に浮かせ、
+// 左右は画面内にクランプする。位置は hover したカセットの矩形から計算。
+function CartTip({ tip }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const pad = 8;
+    const half = el.offsetWidth / 2;
+    const x = Math.max(pad + half, Math.min(window.innerWidth - pad - half, tip.x));
+    el.style.left = `${x}px`;
+  }, [tip]);
+  const { game } = tip;
+  return (
+    <div ref={ref} className="wall-cart-tip" style={{
+      position: 'fixed', left: tip.x, top: tip.y,
+      transform: 'translate(-50%, -100%)', zIndex: 10,
+      background: 'rgba(28,28,28,0.92)', color: '#eee', borderRadius: 4,
+      padding: '4px 8px', whiteSpace: 'nowrap', pointerEvents: 'none',
+      fontFamily: font, fontSize: 10, lineHeight: 1.5, textAlign: 'center',
+    }}>
+      <span style={{ fontWeight: 500 }}>{game.name}</span>
+      {(game.hours != null || game.note) && (
+        <span style={{ color: 'rgba(255,255,255,0.55)', marginLeft: 6 }}>
+          {game.hours != null ? `${game.hours}h` : game.note}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MonthCluster({ month, games, startOrder, onHover }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-        {games.map((g, i) => <Cartridge key={g.appid ?? g.name} game={g} order={startOrder + i} />)}
+        {games.map((g, i) => <Cartridge key={g.appid ?? g.name} game={g} order={startOrder + i} onHover={onHover} />)}
       </div>
       {/* 時間軸との接点: 目盛り+月ラベル */}
       <div style={{ width: 1, height: 8, background: 'rgba(0,0,0,0.35)', marginTop: 10 }} />
@@ -98,10 +123,20 @@ function MonthCluster({ month, games, startOrder }) {
 
 export default function CartridgeTimeline({ months }) {
   const { ref, fade, update } = useEdgeFade();
+  const [tip, setTip] = useState(null);
+  // hover したカセットの矩形からツールチップ位置を決める。
+  // タッチ環境(hover なし)では出さない — tap は即リンク遷移するので意味がないため。
+  const onHover = useCallback((game, el) => {
+    if (!game || !window.matchMedia('(hover: hover)').matches) { setTip(null); return; }
+    const r = el.getBoundingClientRect();
+    // hover でカセットが -9px 持ち上がる(+scale)ので、その分の逃げを取る
+    setTip({ game, x: r.left + r.width / 2, y: r.top - 16 });
+  }, []);
+  const onScroll = useCallback(() => { update(); setTip(null); }, [update]);
   if (!months || !months.length) return null;
   let order = 0;
   const clusters = months.map((m) => {
-    const c = <MonthCluster key={m.month} month={m.month} games={m.games} startOrder={order} />;
+    const c = <MonthCluster key={m.month} month={m.month} games={m.games} startOrder={order} onHover={onHover} />;
     order += m.games.length;
     return c;
   });
@@ -122,8 +157,9 @@ export default function CartridgeTimeline({ months }) {
       }}>
         今年遊んだゲームのカセット棚<span className="wall-tl-hint"> · hoverで詳細</span>
       </p>
+      {tip && <CartTip key={tip.game.appid ?? tip.game.name} tip={tip} />}
       <div
-        ref={ref} className="wall-tape-scroll" onScroll={update}
+        ref={ref} className="wall-tape-scroll" onScroll={onScroll}
         style={{
           overflowX: 'auto', overflowY: 'hidden',
           WebkitMaskImage: edgeFadeMask(fade),
@@ -153,13 +189,16 @@ export default function CartridgeTimeline({ months }) {
         }
 
         .wall-cart { transition: transform 240ms cubic-bezier(0.34, 1.45, 0.64, 1), filter 240ms ease; }
-        .wall-cart-tip { opacity: 0; transition: opacity 160ms ease 60ms; }
         a:hover .wall-cart, div:hover > .wall-cart-drop .wall-cart {
           transform: rotate(0deg) translateY(-9px) scale(1.06);
           filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.3));
           z-index: 2;
         }
-        a:hover .wall-cart-tip, div:hover > .wall-cart-drop .wall-cart-tip { opacity: 1; }
+        .wall-cart-tip { animation: tipIn 160ms ease 60ms backwards; }
+        @keyframes tipIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
 
         @media (prefers-reduced-motion: no-preference) {
           .wall-cart-drop {
