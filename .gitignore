@@ -10,6 +10,7 @@ __pycache__/
 node_modules/
 dist/
 dist-aipages/
+dist-standalone/
 public/*
 !public/slices2/
 !public/slices_oc/
@@ -20,3 +21,4 @@ Thumbs.db
 
 # 一時生成プレビュー / 成果物
 slices_peek.png
+.vercel

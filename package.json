@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --base /tomari-guruguru/",
-    "verify:pages": "node scripts/verify-pages-build.mjs"
+    "verify:pages": "node scripts/verify-pages-build.mjs",
+    "build:standalone": "vite build --config vite.standalone.config.js && cp dist-standalone/guruguru.html guruguru-standalone.html"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }
