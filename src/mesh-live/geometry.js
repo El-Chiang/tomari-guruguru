@@ -331,6 +331,132 @@ export function rotatePositionsYaw(positions, yawRadians, options = {}) {
 }
 
 /**
+ * Map a normalized pose parameter to asymmetric negative/positive angles.
+ *
+ * `negativeRadians` may be supplied as either a negative limit or a positive
+ * magnitude; the result is always negative for a negative parameter. This is
+ * convenient for art-directed ranges such as down=-8 degrees and up=12
+ * degrees. Values are clamped to `[-1, 1]` unless `clamp=false`.
+ *
+ * @param {number} value
+ * @param {{negativeRadians?:number,positiveRadians?:number,negative?:number,
+ *   positive?:number,clamp?:boolean}} angles
+ * @returns {number}
+ */
+export function mapAsymmetricAngle(value, angles) {
+  assertFiniteNumber(value, 'value');
+  const negativeRadians = angles.negativeRadians ?? angles.negative ?? 0;
+  const positiveRadians = angles.positiveRadians ?? angles.positive ?? 0;
+  assertFiniteNumber(negativeRadians, 'negativeRadians');
+  assertFiniteNumber(positiveRadians, 'positiveRadians');
+  const parameter = angles.clamp === false ? value : Math.max(-1, Math.min(1, value));
+  return parameter < 0
+    ? Math.abs(negativeRadians) * parameter
+    : Math.abs(positiveRadians) * parameter;
+}
+
+/**
+ * Rotate XYZ vertices around an arbitrary origin on the world X axis.
+ * Positive pitch moves positive-Y vertices toward positive Z.
+ *
+ * @param {ArrayLike<number>} positions
+ * @param {number} pitchRadians
+ * @param {{originX?:number,originY?:number,originZ?:number}} [options]
+ * @returns {Float32Array}
+ */
+export function rotatePositionsPitch(positions, pitchRadians, options = {}) {
+  assertXYZArray(positions, 'positions');
+  assertFiniteNumber(pitchRadians, 'pitchRadians');
+  const originX = options.originX ?? 0;
+  const originY = options.originY ?? 0;
+  const originZ = options.originZ ?? 0;
+  for (const [value, name] of [[originX, 'originX'], [originY, 'originY'], [originZ, 'originZ']]) {
+    assertFiniteNumber(value, name);
+  }
+  const cosine = Math.cos(pitchRadians);
+  const sine = Math.sin(pitchRadians);
+  const result = new Float32Array(positions.length);
+
+  for (let offset = 0; offset < positions.length; offset += 3) {
+    const y = positions[offset + 1] - originY;
+    const z = positions[offset + 2] - originZ;
+    result[offset] = positions[offset];
+    result[offset + 1] = originY + cosine * y - sine * z;
+    result[offset + 2] = originZ + sine * y + cosine * z;
+  }
+  return result;
+}
+
+function resolveCornerResidual(corners, yawSign, pitchSign) {
+  if (!corners) return undefined;
+  const yawName = yawSign < 0 ? 'Negative' : 'Positive';
+  const pitchName = pitchSign < 0 ? 'Negative' : 'Positive';
+  const compactName = `${yawSign < 0 ? 'negative' : 'positive'}${pitchName}`;
+  return corners[`${yawSign},${pitchSign}`]
+    ?? corners[`${yawSign}:${pitchSign}`]
+    ?? corners[`yaw${yawName}Pitch${pitchName}`]
+    ?? corners[compactName];
+}
+
+/**
+ * Blend independent yaw and pitch key-shape offsets, then add an optional
+ * residual for the active diagonal corner.
+ *
+ * Axis key shapes use the same `negative/neutral/positive` structure as
+ * `interpolateKeyShapes`. Corner residuals are additive XYZ offsets at full
+ * diagonal poses and are weighted by `abs(yaw * pitch)`. Supported corner keys
+ * include `"-1,-1"`, `"1,-1"`, `"-1,1"`, `"1,1"` and names such as
+ * `yawNegativePitchPositive`.
+ *
+ * @param {ArrayLike<number>} basePositions
+ * @param {{yaw?:number,pitch?:number,yawKeyShapes?:object,pitchKeyShapes?:object,
+ *   cornerResiduals?:object}} pose
+ * @param {{clamp?:boolean}} [options]
+ * @returns {Float32Array}
+ */
+export function blendPoseKeyShapes(basePositions, pose = {}, options = {}) {
+  assertXYZArray(basePositions, 'basePositions');
+  const shouldClamp = options.clamp !== false;
+  const rawYaw = pose.yaw ?? 0;
+  const rawPitch = pose.pitch ?? 0;
+  assertFiniteNumber(rawYaw, 'yaw');
+  assertFiniteNumber(rawPitch, 'pitch');
+  const yaw = shouldClamp ? Math.max(-1, Math.min(1, rawYaw)) : rawYaw;
+  const pitch = shouldClamp ? Math.max(-1, Math.min(1, rawPitch)) : rawPitch;
+  const zero = new Float32Array(basePositions.length);
+  const yawOffsets = pose.yawKeyShapes
+    ? interpolateKeyShapes(zero, pose.yawKeyShapes, yaw, { clamp: false })
+    : zero;
+  const pitchOffsets = pose.pitchKeyShapes
+    ? interpolateKeyShapes(zero, pose.pitchKeyShapes, pitch, { clamp: false })
+    : zero;
+  const result = new Float32Array(basePositions.length);
+
+  let corner;
+  let cornerWeight = 0;
+  if (Math.abs(yaw) > EPSILON && Math.abs(pitch) > EPSILON) {
+    const yawSign = yaw < 0 ? -1 : 1;
+    const pitchSign = pitch < 0 ? -1 : 1;
+    corner = resolveCornerResidual(pose.cornerResiduals, yawSign, pitchSign);
+    cornerWeight = Math.abs(yaw * pitch);
+    if (corner) {
+      assertXYZArray(corner, 'corner residual');
+      if (corner.length !== basePositions.length) {
+        throw new RangeError('corner residual length must match basePositions');
+      }
+    }
+  }
+
+  for (let index = 0; index < result.length; index += 1) {
+    result[index] = basePositions[index]
+      + yawOffsets[index]
+      + pitchOffsets[index]
+      + (corner?.[index] ?? 0) * cornerWeight;
+  }
+  return result;
+}
+
+/**
  * Compose a base mesh, per-vertex Z profile, XYZ correction and final yaw.
  * Z values and deformation vectors are additive. Rotation is applied last.
  *
@@ -370,4 +496,54 @@ export function composePositions(basePositions, options = {}) {
     originY: options.originY ?? origin.y ?? 0,
     originZ: options.originZ ?? origin.z ?? 0,
   });
+}
+
+/**
+ * Compose a complete two-axis head pose without a rendering dependency.
+ *
+ * Processing order is base/surface/deformation → yaw and pitch key shapes →
+ * optional corner residual → yaw rotation → pitch rotation. Explicit
+ * `yawRadians`/`pitchRadians` take priority; otherwise normalized `yaw` and
+ * `pitch` are mapped through optional asymmetric angle ranges.
+ *
+ * @param {ArrayLike<number>} basePositions
+ * @param {{zProfile?:ArrayLike<number>,deformation?:ArrayLike<number>,yaw?:number,pitch?:number,
+ *   yawRadians?:number,pitchRadians?:number,yawAngles?:object,pitchAngles?:object,
+ *   yawKeyShapes?:object,pitchKeyShapes?:object,cornerResiduals?:object,
+ *   origin?:{x?:number,y?:number,z?:number},originX?:number,originY?:number,originZ?:number,
+ *   clamp?:boolean}} [options]
+ * @returns {Float32Array}
+ */
+export function composeHeadPose(basePositions, options = {}) {
+  const yaw = options.yaw ?? 0;
+  const pitch = options.pitch ?? 0;
+  const composed = composePositions(basePositions, {
+    zProfile: options.zProfile,
+    deformation: options.deformation,
+  });
+  const corrected = blendPoseKeyShapes(composed, {
+    yaw,
+    pitch,
+    yawKeyShapes: options.yawKeyShapes,
+    pitchKeyShapes: options.pitchKeyShapes,
+    cornerResiduals: options.cornerResiduals,
+  }, { clamp: options.clamp });
+  const yawRadians = options.yawRadians
+    ?? (options.yawAngles ? mapAsymmetricAngle(yaw, { ...options.yawAngles, clamp: options.clamp }) : 0);
+  const pitchRadians = options.pitchRadians
+    ?? (options.pitchAngles ? mapAsymmetricAngle(pitch, { ...options.pitchAngles, clamp: options.clamp }) : 0);
+  assertFiniteNumber(yawRadians, 'yawRadians');
+  assertFiniteNumber(pitchRadians, 'pitchRadians');
+  const origin = options.origin ?? {};
+  const rotationOptions = {
+    originX: options.originX ?? origin.x ?? 0,
+    originY: options.originY ?? origin.y ?? 0,
+    originZ: options.originZ ?? origin.z ?? 0,
+  };
+  const yawed = Math.abs(yawRadians) <= EPSILON
+    ? corrected
+    : rotatePositionsYaw(corrected, yawRadians, rotationOptions);
+  return Math.abs(pitchRadians) <= EPSILON
+    ? yawed
+    : rotatePositionsPitch(yawed, pitchRadians, rotationOptions);
 }

@@ -6,6 +6,7 @@ export class ParameterController {
   constructor(initial = {}) {
     this.current = {
       headYaw: 0,
+      headPitch: 0,
       eyeX: 0,
       eyeY: 0,
       eyeOpenL: 1,
@@ -42,4 +43,3 @@ export class ParameterController {
     return this.current;
   }
 }
-

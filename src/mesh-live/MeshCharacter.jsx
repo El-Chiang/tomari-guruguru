@@ -1,18 +1,25 @@
-import React, { useEffect, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { MeshCharacterRenderer } from './renderer';
 
-export default function MeshCharacter({
-  parameters,
+const MeshCharacter = forwardRef(function MeshCharacter({
   mode,
   wireframe,
   surfaceSettings,
   onReady,
   onStats,
-}) {
+}, ref) {
   const hostRef = useRef(null);
   const rendererRef = useRef(null);
-  const propsRef = useRef({ parameters, mode, wireframe, surfaceSettings });
-  propsRef.current = { parameters, mode, wireframe, surfaceSettings };
+  const pendingParametersRef = useRef({});
+  const propsRef = useRef({ mode, wireframe, surfaceSettings });
+  propsRef.current = { mode, wireframe, surfaceSettings };
+
+  useImperativeHandle(ref, () => ({
+    updateParameters(parameters) {
+      pendingParametersRef.current = parameters;
+      rendererRef.current?.update(parameters);
+    },
+  }), []);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -28,7 +35,7 @@ export default function MeshCharacter({
       renderer.setMode(latest.mode);
       renderer.setWireframe(latest.wireframe);
       renderer.setSurfaceSettings(latest.surfaceSettings);
-      renderer.update(latest.parameters);
+      renderer.update(pendingParametersRef.current);
       onReady?.();
     });
 
@@ -42,8 +49,8 @@ export default function MeshCharacter({
   useEffect(() => rendererRef.current?.setMode(mode), [mode]);
   useEffect(() => rendererRef.current?.setWireframe(wireframe), [wireframe]);
   useEffect(() => rendererRef.current?.setSurfaceSettings(surfaceSettings), [surfaceSettings]);
-  useEffect(() => rendererRef.current?.update(parameters), [parameters]);
 
   return <div ref={hostRef} className="mesh-host" aria-label="2.5D character preview"></div>;
-}
+});
 
+export default MeshCharacter;

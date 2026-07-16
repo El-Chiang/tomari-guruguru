@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:mesh": "node --test src/mesh-live/geometry.test.mjs",
+    "test:mesh": "node --test src/mesh-live/*.test.mjs",
     "preview": "vite preview --base /tomari-guruguru/",
     "verify:pages": "node scripts/verify-pages-build.mjs",
     "build:standalone": "vite build --config vite.standalone.config.js && cp dist-standalone/guruguru.html guruguru-standalone.html"

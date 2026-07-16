@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  blendPoseKeyShapes,
+  composeHeadPose,
   composePositions,
   createEllipsoidZProfile,
   createGridGeometry,
@@ -9,7 +11,9 @@ import {
   createGridUVs,
   createShellZProfile,
   interpolateKeyShapes,
+  mapAsymmetricAngle,
   normalizeCrop,
+  rotatePositionsPitch,
   rotatePositionsYaw,
 } from './geometry.js';
 
@@ -98,6 +102,46 @@ test('yaw rotation uses a right-handed Y-axis rotation around an origin', () => 
   assert.deepEqual(round(result), [1, 3, -1]);
 });
 
+test('asymmetric angle mapping gives negative and positive poses independent limits', () => {
+  const angles = { negativeRadians: -0.2, positiveRadians: 0.4 };
+  assert.equal(mapAsymmetricAngle(-0.5, angles), -0.1);
+  assert.equal(mapAsymmetricAngle(0.5, angles), 0.2);
+  assert.equal(mapAsymmetricAngle(5, angles), 0.4);
+  assert.equal(mapAsymmetricAngle(-2, { negativeRadians: 0.2, positiveRadians: 0.4 }), -0.2);
+});
+
+test('pitch rotation uses a right-handed X-axis rotation around an origin', () => {
+  const result = rotatePositionsPitch(new Float32Array([3, 3, 0]), Math.PI / 2, {
+    originX: 2,
+    originY: 1,
+  });
+  assert.deepEqual(round(result), [3, 1, 2]);
+});
+
+test('pose key shapes add axis corrections and a weighted active-corner residual', () => {
+  const base = new Float32Array([10, 20, 30]);
+  const result = blendPoseKeyShapes(base, {
+    yaw: 0.5,
+    pitch: 0.25,
+    yawKeyShapes: { positive: new Float32Array([2, 0, 0]) },
+    pitchKeyShapes: { positive: new Float32Array([0, 4, 0]) },
+    cornerResiduals: { '1,1': new Float32Array([0, 0, 8]) },
+  });
+  assert.deepEqual(round(result), [11, 21, 31]);
+});
+
+test('pose key shapes select only the residual from the active quadrant', () => {
+  const result = blendPoseKeyShapes(new Float32Array([0, 0, 0]), {
+    yaw: -1,
+    pitch: 0.5,
+    cornerResiduals: {
+      yawNegativePitchPositive: new Float32Array([2, 4, 6]),
+      yawPositivePitchPositive: new Float32Array([20, 40, 60]),
+    },
+  });
+  assert.deepEqual(round(result), [1, 2, 3]);
+});
+
 test('composePositions adds surface and corrective offsets before yaw', () => {
   const result = composePositions(new Float32Array([1, 2, 3, -1, 0, 1]), {
     zProfile: new Float32Array([4, 2]),
@@ -107,6 +151,28 @@ test('composePositions adds surface and corrective offsets before yaw', () => {
   assert.deepEqual(round(result), [9, 1, -2, 2, 3, 1]);
 });
 
+test('composeHeadPose applies keyforms, then yaw, then pitch', () => {
+  const result = composeHeadPose(new Float32Array([1, 1, 0]), {
+    yaw: 1,
+    pitch: 1,
+    yawAngles: { negativeRadians: Math.PI / 2, positiveRadians: Math.PI / 2 },
+    pitchAngles: { negativeRadians: Math.PI / 2, positiveRadians: Math.PI / 2 },
+  });
+  assert.deepEqual(round(result), [0, 1, 1]);
+});
+
+test('composeHeadPose supports asymmetric pitch limits and corner correction', () => {
+  const result = composeHeadPose(new Float32Array([0, 0, 0]), {
+    yaw: -0.5,
+    pitch: -1,
+    pitchAngles: { negativeRadians: 0, positiveRadians: 1 },
+    yawKeyShapes: { negative: new Float32Array([-4, 0, 0]) },
+    pitchKeyShapes: { negative: new Float32Array([0, -3, 0]) },
+    cornerResiduals: { '-1,-1': new Float32Array([0, 0, 2]) },
+  });
+  assert.deepEqual(round(result), [-2, -3, 1]);
+});
+
 test('geometry helpers reject mismatched vertex data', () => {
   assert.throws(() => composePositions(new Float32Array([0, 0, 0]), {
     zProfile: new Float32Array([0, 1]),
@@ -114,4 +180,9 @@ test('geometry helpers reject mismatched vertex data', () => {
   assert.throws(() => interpolateKeyShapes(new Float32Array([0, 0, 0]), {
     positive: new Float32Array([0, 0, 0, 0, 0, 0]),
   }, 1), /length must match/);
+  assert.throws(() => blendPoseKeyShapes(new Float32Array([0, 0, 0]), {
+    yaw: 1,
+    pitch: 1,
+    cornerResiduals: { '1,1': new Float32Array([0, 0, 0, 0, 0, 0]) },
+  }), /corner residual length must match/);
 });
