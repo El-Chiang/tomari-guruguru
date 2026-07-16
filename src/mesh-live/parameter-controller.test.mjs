@@ -3,16 +3,20 @@ import test from 'node:test';
 
 import { ParameterController } from './parameter-controller.js';
 
-test('headPitch starts neutral and clamps to the normalized pose range', () => {
+test('head poses start neutral and clamp to the normalized pose range', () => {
   const controller = new ParameterController();
 
   assert.equal(controller.current.headPitch, 0);
+  assert.equal(controller.current.headRoll, 0);
   controller.setImmediate({ headPitch: -4 });
   assert.equal(controller.current.headPitch, -1);
   assert.equal(controller.target.headPitch, -1);
 
   controller.setTarget('headPitch', 3);
   assert.equal(controller.target.headPitch, 1);
+
+  controller.setImmediate({ headRoll: 4 });
+  assert.equal(controller.current.headRoll, 1);
 });
 
 test('invalid pose values do not overwrite the current target', () => {

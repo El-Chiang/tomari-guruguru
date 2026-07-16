@@ -6,10 +6,17 @@ export const PITCH_UP_LIMIT_DEG = 15;
 
 export const PITCH_DOWN_LIMIT_DEG = 15;
 
+export const ROLL_LIMIT_DEG = 8;
+
 // The head turns around the ear/upper-neck axis rather than the canvas centre.
 // Keep this in model data so the A/B prototype and future exported rigs share
 // exactly the same neutral pose.
 export const HEAD_PIVOT_IMAGE = Object.freeze({ x: 489, y: 410 });
+
+// Roll has a different anatomical pivot from yaw/pitch. Keeping the tip of
+// the chin fixed makes a small head tilt read as a neck bend instead of a flat
+// card rotating around the centre of the face.
+export const HEAD_ROLL_PIVOT_IMAGE = Object.freeze({ x: 489, y: 570 });
 
 export const EYE_TURN_SETTINGS = Object.freeze({
   farScaleX: 0.72,

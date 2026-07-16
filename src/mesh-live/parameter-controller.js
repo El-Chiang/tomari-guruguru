@@ -7,6 +7,7 @@ export class ParameterController {
     this.current = {
       headYaw: 0,
       headPitch: 0,
+      headRoll: 0,
       eyeX: 0,
       eyeY: 0,
       eyeOpenL: 1,

@@ -65,3 +65,21 @@ test('idle saccade is generated after the quiet interval', () => {
   }
   assert.ok(Math.abs(output.eyeX) > 0.01 || Math.abs(output.eyeY) > 0.01);
 });
+
+test('automatic head roll reaches its authored amplitude and can be disabled', () => {
+  const director = new MotionDirector({ random: () => 0.5 });
+  let output;
+  for (let frame = 0; frame < 10; frame += 1) {
+    output = director.update(0.1, {
+      autoBlink: false,
+      autoSaccade: false,
+      autoRoll: true,
+      rollAmplitude: 0.5,
+      rollDuration: 4,
+    });
+  }
+  assert.ok(Math.abs(output.headRoll - 0.5) < 1e-12);
+
+  output = director.update(0.1, { autoBlink: false, autoSaccade: false, autoRoll: false });
+  assert.equal(output.headRoll, 0);
+});

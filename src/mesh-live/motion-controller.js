@@ -15,6 +15,9 @@ export const DEFAULT_MOTION_SETTINGS = Object.freeze({
   eyeAmplitude: 1,
   idleDelay: 1.6,
   gazeSmoothing: 14,
+  autoRoll: true,
+  rollAmplitude: 0.5,
+  rollDuration: 4,
 });
 
 function clamp(value, min = -1, max = 1) {
@@ -152,6 +155,13 @@ export class MotionDirector {
     return openness;
   }
 
+  updateRoll(enabled, amplitude, duration) {
+    if (!enabled) return 0;
+    const safeAmplitude = clamp(amplitude, 0, 1);
+    const safeDuration = Math.max(0.4, Number.isFinite(duration) ? duration : 4);
+    return Math.sin((this.time / safeDuration) * Math.PI * 2) * safeAmplitude;
+  }
+
   update(deltaSeconds = 1 / 60, settings = {}) {
     const delta = clamp(Number.isFinite(deltaSeconds) ? deltaSeconds : 0, 0, 0.1);
     this.time += delta;
@@ -168,9 +178,11 @@ export class MotionDirector {
 
     const amplitude = clamp(options.eyeAmplitude, 0, 1.5);
     const eyeOpen = this.updateBlink(options.autoBlink);
+    const headRoll = this.updateRoll(options.autoRoll, options.rollAmplitude, options.rollDuration);
     return mixMotionParameters(
-      { eyeX: 0, eyeY: 0, eyeOpenL: 1, eyeOpenR: 1 },
+      { headRoll: 0, eyeX: 0, eyeY: 0, eyeOpenL: 1, eyeOpenR: 1 },
       [
+        { mode: 'add', values: { headRoll } },
         { mode: 'add', values: { eyeX: this.gaze.x * amplitude, eyeY: this.gaze.y * amplitude } },
         { mode: 'multiply', values: { eyeOpenL: eyeOpen, eyeOpenR: eyeOpen } },
       ],

@@ -6,6 +6,7 @@ import {
   ICHIGO_LAYERS,
   PITCH_DOWN_LIMIT_DEG,
   PITCH_UP_LIMIT_DEG,
+  ROLL_LIMIT_DEG,
   YAW_LIMIT_DEG,
 } from './ichigo-model';
 import { DEFAULT_MOTION_SETTINGS, MotionDirector } from './motion-controller';
@@ -70,6 +71,7 @@ function App() {
   const [mode, setMode] = useState('B');
   const [yawDeg, setYawDeg] = useState(0);
   const [pitch, setPitch] = useState(0);
+  const [rollDeg, setRollDeg] = useState(0);
   const [pointerFollow, setPointerFollow] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [reference, setReference] = useState(false);
@@ -81,9 +83,11 @@ function App() {
   const meshRef = useRef(null);
   const yawRef = useRef(yawDeg);
   const pitchRef = useRef(pitch);
+  const rollRef = useRef(rollDeg);
   const motionSettingsRef = useRef(motionSettings);
   yawRef.current = yawDeg;
   pitchRef.current = pitch;
+  rollRef.current = rollDeg;
   motionSettingsRef.current = motionSettings;
   const pitchDeg = pitchToDegrees(pitch);
 
@@ -103,7 +107,11 @@ function App() {
       previous = now;
       controller.setTarget('headYaw', yawRef.current / YAW_LIMIT_DEG);
       controller.setTarget('headPitch', pitchRef.current);
-      controller.setImmediate(motionDirector.update(delta, motionSettingsRef.current));
+      const directedMotion = motionDirector.update(delta, motionSettingsRef.current);
+      controller.setImmediate({
+        ...directedMotion,
+        headRoll: clamp((directedMotion.headRoll ?? 0) + rollRef.current / ROLL_LIMIT_DEG),
+      });
       meshRef.current?.updateParameters(controller.update(delta));
       frame = requestAnimationFrame(tick);
     };
@@ -141,6 +149,17 @@ function App() {
     setPitch(clamp(degreesToPitch(value)));
   };
 
+  const chooseRoll = (value) => {
+    setMotion('autoRoll', false);
+    setRollDeg(value);
+  };
+
+  const toggleAutoRoll = () => {
+    const enabled = !motionSettings.autoRoll;
+    if (enabled) setRollDeg(0);
+    setMotion('autoRoll', enabled);
+  };
+
   const choosePose = (yaw, nextPitch) => {
     setPointerFollow(false);
     setYawDeg(yaw);
@@ -168,6 +187,9 @@ function App() {
             <div className="pose-readout">
               <strong>Y {yawDeg > 0 ? '+' : ''}{yawDeg.toFixed(1)}°</strong>
               <strong>X {pitchDeg > 0 ? '+' : ''}{pitchDeg.toFixed(1)}°</strong>
+              <strong>Z {motionSettings.autoRoll
+                ? `AUTO ±${(motionSettings.rollAmplitude * ROLL_LIMIT_DEG).toFixed(1)}°`
+                : `${rollDeg > 0 ? '+' : ''}${rollDeg.toFixed(1)}°`}</strong>
             </div>
           </div>
           <div className="character-frame">
@@ -201,6 +223,8 @@ function App() {
               step={0.1} unit="°" onChange={chooseYaw}></Range>
             <Range label="HeadPitch" value={pitchDeg} min={-PITCH_UP_LIMIT_DEG} max={PITCH_DOWN_LIMIT_DEG}
               step={0.1} unit="°" onChange={choosePitchDegrees}></Range>
+            <Range label="HeadRoll" value={rollDeg} min={-ROLL_LIMIT_DEG} max={ROLL_LIMIT_DEG}
+              step={0.1} unit="°" onChange={chooseRoll}></Range>
             <div className="button-grid">
               <Toggle active={pointerFollow} onClick={() => setPointerFollow((value) => !value)}>头部跟随</Toggle>
               <Toggle active={wireframe} onClick={() => setWireframe((value) => !value)}>显示网格</Toggle>
@@ -228,7 +252,20 @@ function App() {
           </section>
 
           <section>
-            <div className="section-title"><span>04</span><h2>手工曲面</h2></div>
+            <div className="section-title"><span>04</span><h2>歪头动作</h2></div>
+            <div className="button-grid roll-controls">
+              <Toggle active={motionSettings.autoRoll} onClick={toggleAutoRoll}>自动歪头</Toggle>
+            </div>
+            <Range label="摆动幅度" value={motionSettings.rollAmplitude * ROLL_LIMIT_DEG}
+              min={0} max={ROLL_LIMIT_DEG} step={0.2} unit="°"
+              onChange={(value) => setMotion('rollAmplitude', value / ROLL_LIMIT_DEG)}></Range>
+            <Range label="摆动周期" value={motionSettings.rollDuration} min={2} max={9} step={0.1} unit="s"
+              onChange={(value) => setMotion('rollDuration', value)}></Range>
+            <p className="hint">默认沿用 guruguru 的 ±4° / 4s。歪头会叠加在当前转头、点头、眼球与眨眼动作上。</p>
+          </section>
+
+          <section>
+            <div className="section-title"><span>05</span><h2>手工曲面</h2></div>
             <Range label="脸部深度" value={surfaceSettings.faceDepth} min={0} max={100} step={1}
               onChange={(value) => setSurface('faceDepth', value)}></Range>
             <Range label="头发壳层" value={surfaceSettings.hairDepth} min={0} max={70} step={1}

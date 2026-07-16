@@ -98,6 +98,7 @@ button { color: inherit; }
 .range-row input { width: 100%; accent-color: #d4935e; }
 .range-row output { text-align: right; color: rgba(255,255,255,.78); font: 11px/1 ui-monospace, monospace; }
 .button-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 16px; }
+.roll-controls { grid-template-columns: 1fr; }
 .reset { width: 100%; margin-top: 13px; color: rgba(255,255,255,.48); }
 
 .control-panel footer { padding: 16px 22px; display: flex; justify-content: space-between; color: rgba(255,255,255,.24); font: 9px/1 ui-monospace, monospace; text-transform: uppercase; }

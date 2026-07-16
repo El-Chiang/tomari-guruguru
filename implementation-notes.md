@@ -27,3 +27,10 @@ Implemented the first web HeadPitch pass on top of the existing HeadYaw mesh pro
 - Eye motion is applied after HeadYaw/HeadPitch keyforms, so gaze and blink remain local to the already-posed eye meshes.
 - The iris fades as the eyelid closes, preventing a coloured iris seam from surviving in the compressed closed-eye pose.
 - Pointer Y is inverted at the DOM-to-model boundary while HeadPitch keeps its screen-space direction; horizontal iris travel was increased from `4.5` to `6.5` model units after visual review.
+
+## 2026-07-16 — HeadRoll composition
+
+- Added normalized `headRoll` to the shared parameter controller and applied it to the existing head group after yaw/pitch.
+- Automatic roll ports guruguru's default `±4° / 4s` idle tilt and remains adjustable up to `8°`.
+- A manual HeadRoll slider pauses the automatic source; re-enabling automatic roll resets the manual offset to avoid competing controls.
+- HeadRoll uses a nested transform group with its own pivot at the chin tip (`489, 570` in model-image coordinates); yaw/pitch keep the existing ear-axis pivot.

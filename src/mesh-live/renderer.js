@@ -3,10 +3,12 @@ import {
   DEFAULT_SURFACE_SETTINGS,
   EYE_TURN_SETTINGS,
   HEAD_PIVOT_IMAGE,
+  HEAD_ROLL_PIVOT_IMAGE,
   ICHIGO_LAYERS,
   MODEL_SIZE,
   PITCH_DOWN_LIMIT_DEG,
   PITCH_UP_LIMIT_DEG,
+  ROLL_LIMIT_DEG,
   YAW_LIMIT_DEG,
 } from './ichigo-model';
 import { createGridGeometry, interpolateKeyShapes } from './geometry';
@@ -15,8 +17,11 @@ const HALF_MODEL = MODEL_SIZE / 2;
 const HEAD_YAW_RADIANS = THREE.MathUtils.degToRad(YAW_LIMIT_DEG);
 const HEAD_PITCH_UP_RADIANS = THREE.MathUtils.degToRad(PITCH_UP_LIMIT_DEG);
 const HEAD_PITCH_DOWN_RADIANS = THREE.MathUtils.degToRad(PITCH_DOWN_LIMIT_DEG);
+const HEAD_ROLL_RADIANS = THREE.MathUtils.degToRad(ROLL_LIMIT_DEG);
 const HEAD_PIVOT_X = HEAD_PIVOT_IMAGE.x - HALF_MODEL;
 const HEAD_PIVOT_Y = HALF_MODEL - HEAD_PIVOT_IMAGE.y;
+const HEAD_ROLL_PIVOT_X = HEAD_ROLL_PIVOT_IMAGE.x - HALF_MODEL;
+const HEAD_ROLL_PIVOT_Y = HALF_MODEL - HEAD_ROLL_PIVOT_IMAGE.y;
 const FACE_SURFACE = Object.freeze({ centerX: 489, centerY: 365, radiusX: 265, radiusY: 340 });
 const HAIR_SURFACE = Object.freeze({ centerX: 489, centerY: 340, radiusX: 330, radiusY: 390 });
 
@@ -150,6 +155,7 @@ export class MeshCharacterRenderer {
     this.parameters = {
       headYaw: 0,
       headPitch: 0,
+      headRoll: 0,
       eyeX: 0,
       eyeY: 0,
       eyeOpenL: 1,
@@ -165,6 +171,14 @@ export class MeshCharacterRenderer {
     this.headGroup = new THREE.Group();
     this.headGroup.name = 'head-pose';
     this.headGroup.rotation.order = 'YXZ';
+    this.rollGroup = new THREE.Group();
+    this.rollGroup.name = 'head-roll';
+    this.rollGroup.position.set(
+      HEAD_ROLL_PIVOT_X - HEAD_PIVOT_X,
+      HEAD_ROLL_PIVOT_Y - HEAD_PIVOT_Y,
+      0,
+    );
+    this.headGroup.add(this.rollGroup);
     this.scene.add(this.headGroup);
 
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
@@ -264,12 +278,12 @@ export class MeshCharacterRenderer {
     wireMesh.frustumCulled = false;
     wireMesh.visible = false;
 
-    const parent = layer.group === 'body' ? this.scene : this.headGroup;
-    if (parent === this.headGroup) {
-      mesh.position.x = -HEAD_PIVOT_X;
-      mesh.position.y = -HEAD_PIVOT_Y;
-      wireMesh.position.x = -HEAD_PIVOT_X;
-      wireMesh.position.y = -HEAD_PIVOT_Y;
+    const parent = layer.group === 'body' ? this.scene : this.rollGroup;
+    if (parent === this.rollGroup) {
+      mesh.position.x = -HEAD_ROLL_PIVOT_X;
+      mesh.position.y = -HEAD_ROLL_PIVOT_Y;
+      wireMesh.position.x = -HEAD_ROLL_PIVOT_X;
+      wireMesh.position.y = -HEAD_ROLL_PIVOT_Y;
     }
     parent.add(mesh, wireMesh);
 
@@ -354,6 +368,7 @@ export class MeshCharacterRenderer {
     if (!this.layers.length || this.disposed) return;
     const yaw = THREE.MathUtils.clamp(this.parameters.headYaw ?? 0, -1, 1);
     const pitch = THREE.MathUtils.clamp(this.parameters.headPitch ?? 0, -1, 1);
+    const roll = THREE.MathUtils.clamp(this.parameters.headRoll ?? 0, -1, 1);
     const useCorrective = this.mode === 'B';
     const corrective = useCorrective ? this.surfaceSettings.corrective : 0;
     const pitchCorrective = useCorrective ? this.surfaceSettings.pitchCorrective : 0;
@@ -371,6 +386,9 @@ export class MeshCharacterRenderer {
     this.headGroup.rotation.x = pitch < 0
       ? pitch * HEAD_PITCH_UP_RADIANS
       : pitch * HEAD_PITCH_DOWN_RADIANS;
+    // Negate model-space rotation so positive HeadRoll matches the browser/CSS
+    // convention used by the original guruguru prototype: clockwise on screen.
+    this.rollGroup.rotation.z = -roll * HEAD_ROLL_RADIANS;
 
     for (const record of this.layers) {
       const layer = record.definition;
