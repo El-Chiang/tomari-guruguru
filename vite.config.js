@@ -18,6 +18,7 @@ export default defineConfig(({ command }) => ({
         guruguru: resolve(import.meta.dirname, 'guruguru.html'),
         talk: resolve(import.meta.dirname, 'talk.html'),
         oclive: resolve(import.meta.dirname, 'oc-live.html'),
+        meshturn: resolve(import.meta.dirname, 'mesh-turn.html'),
       },
     },
   },

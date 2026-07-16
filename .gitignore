@@ -15,6 +15,7 @@ public/*
 !public/slices2/
 !public/slices_oc/
 !public/oc-layers/
+!public/oc-mesh-layers/
 !public/wall/
 .DS_Store
 Thumbs.db

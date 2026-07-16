@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test:mesh": "node --test src/mesh-live/geometry.test.mjs",
     "preview": "vite preview --base /tomari-guruguru/",
     "verify:pages": "node scripts/verify-pages-build.mjs",
     "build:standalone": "vite build --config vite.standalone.config.js && cp dist-standalone/guruguru.html guruguru-standalone.html"
@@ -15,7 +16,8 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "three": "^0.178.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
