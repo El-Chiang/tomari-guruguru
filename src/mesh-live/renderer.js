@@ -417,7 +417,7 @@ export class MeshCharacterRenderer {
         if (layer.eye) {
           y = (y - posedEyeCenterY) * Math.max(0.04, eyeOpen) + posedEyeCenterY;
           if (layer.iris) {
-            x += (this.parameters.eyeX ?? 0) * 4.5;
+            x += (this.parameters.eyeX ?? 0) * 6.5;
             y += (this.parameters.eyeY ?? 0) * 3;
           }
         }
@@ -428,7 +428,12 @@ export class MeshCharacterRenderer {
       position.needsUpdate = true;
       record.geometry.computeBoundingSphere();
 
-      if (layer.id === 'mouth') {
+      if (layer.iris) {
+        // A closing lid occludes the iris before the eyelash reaches its
+        // flattest key shape. Fading here avoids leaving a coloured iris line
+        // in the fully closed pose while the eyelash mesh forms the lid line.
+        record.material.opacity = THREE.MathUtils.smoothstep(eyeOpen, 0.08, 0.52);
+      } else if (layer.id === 'mouth') {
         record.material.opacity = 1 - THREE.MathUtils.clamp(this.parameters.mouthOpen ?? 0, 0, 1);
       } else if (layer.opacityParameter) {
         record.material.opacity = THREE.MathUtils.clamp(this.parameters[layer.opacityParameter] ?? 0, 0, 1);

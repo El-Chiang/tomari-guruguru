@@ -8,6 +8,7 @@ import {
   PITCH_UP_LIMIT_DEG,
   YAW_LIMIT_DEG,
 } from './ichigo-model';
+import { DEFAULT_MOTION_SETTINGS, MotionDirector } from './motion-controller';
 import { ParameterController, clamp } from './parameter-controller';
 import './mesh-turn.css';
 
@@ -65,6 +66,7 @@ function Toggle({ children, active, onClick }) {
 
 function App() {
   const controller = useMemo(() => new ParameterController(), []);
+  const motionDirector = useMemo(() => new MotionDirector(), []);
   const [mode, setMode] = useState('B');
   const [yawDeg, setYawDeg] = useState(0);
   const [pitch, setPitch] = useState(0);
@@ -74,16 +76,23 @@ function App() {
   const [ready, setReady] = useState(false);
   const [fps, setFps] = useState(0);
   const [surfaceSettings, setSurfaceSettings] = useState({ ...DEFAULT_SURFACE_SETTINGS });
+  const [motionSettings, setMotionSettings] = useState({ ...DEFAULT_MOTION_SETTINGS });
   const stageRef = useRef(null);
   const meshRef = useRef(null);
   const yawRef = useRef(yawDeg);
   const pitchRef = useRef(pitch);
+  const motionSettingsRef = useRef(motionSettings);
   yawRef.current = yawDeg;
   pitchRef.current = pitch;
+  motionSettingsRef.current = motionSettings;
   const pitchDeg = pitchToDegrees(pitch);
 
   const setSurface = useCallback((name, value) => {
     setSurfaceSettings((previous) => ({ ...previous, [name]: value }));
+  }, []);
+
+  const setMotion = useCallback((name, value) => {
+    setMotionSettings((previous) => ({ ...previous, [name]: value }));
   }, []);
 
   useEffect(() => {
@@ -94,26 +103,33 @@ function App() {
       previous = now;
       controller.setTarget('headYaw', yawRef.current / YAW_LIMIT_DEG);
       controller.setTarget('headPitch', pitchRef.current);
+      controller.setImmediate(motionDirector.update(delta, motionSettingsRef.current));
       meshRef.current?.updateParameters(controller.update(delta));
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [controller]);
+  }, [controller, motionDirector]);
 
   useEffect(() => {
-    if (!pointerFollow) return undefined;
+    if (!pointerFollow && !motionSettings.eyeFollow) return undefined;
     const onMove = (event) => {
       const bounds = stageRef.current?.getBoundingClientRect();
       if (!bounds) return;
       const normalizedX = clamp((event.clientX - (bounds.left + bounds.width / 2)) / (bounds.width * 0.42));
       const normalizedY = clamp((event.clientY - (bounds.top + bounds.height / 2)) / (bounds.height * 0.42));
-      setYawDeg(normalizedX * YAW_LIMIT_DEG);
-      setPitch(normalizedY);
+      // DOM Y grows downward while the eye mesh uses model-space Y growing
+      // upward. HeadPitch intentionally keeps the DOM direction (down = nod
+      // down), but gaze must invert it so the irises follow the pointer.
+      motionDirector.setPointer(normalizedX, -normalizedY);
+      if (pointerFollow) {
+        setYawDeg(normalizedX * YAW_LIMIT_DEG);
+        setPitch(normalizedY);
+      }
     };
     window.addEventListener('pointermove', onMove);
     return () => window.removeEventListener('pointermove', onMove);
-  }, [pointerFollow]);
+  }, [motionDirector, motionSettings.eyeFollow, pointerFollow]);
 
   const chooseYaw = (value) => {
     setPointerFollow(false);
@@ -186,14 +202,33 @@ function App() {
             <Range label="HeadPitch" value={pitchDeg} min={-PITCH_UP_LIMIT_DEG} max={PITCH_DOWN_LIMIT_DEG}
               step={0.1} unit="°" onChange={choosePitchDegrees}></Range>
             <div className="button-grid">
-              <Toggle active={pointerFollow} onClick={() => setPointerFollow((value) => !value)}>跟随鼠标</Toggle>
+              <Toggle active={pointerFollow} onClick={() => setPointerFollow((value) => !value)}>头部跟随</Toggle>
               <Toggle active={wireframe} onClick={() => setWireframe((value) => !value)}>显示网格</Toggle>
               <Toggle active={reference} onClick={() => setReference((value) => !value)}>正面叠图</Toggle>
             </div>
           </section>
 
           <section>
-            <div className="section-title"><span>03</span><h2>手工曲面</h2></div>
+            <div className="section-title"><span>03</span><h2>眼睛动作</h2></div>
+            <div className="button-grid">
+              <Toggle active={motionSettings.eyeFollow}
+                onClick={() => setMotion('eyeFollow', !motionSettings.eyeFollow)}>眼球跟随</Toggle>
+              <Toggle active={motionSettings.autoSaccade}
+                onClick={() => setMotion('autoSaccade', !motionSettings.autoSaccade)}>随机扫视</Toggle>
+              <Toggle active={motionSettings.autoBlink}
+                onClick={() => setMotion('autoBlink', !motionSettings.autoBlink)}>自动眨眼</Toggle>
+            </div>
+            <Range label="眼球幅度" value={motionSettings.eyeAmplitude} min={0} max={1.5} step={0.05}
+              onChange={(value) => setMotion('eyeAmplitude', value)}></Range>
+            <Range label="扫视等待" value={motionSettings.idleDelay} min={0.4} max={4} step={0.1} unit="s"
+              onChange={(value) => setMotion('idleDelay', value)}></Range>
+            <button className="reset" type="button"
+              onClick={() => motionDirector.triggerBlink({ duration: 0.65 })}>眨眼测试</button>
+            <p className="hint">鼠标移动时眼球优先跟随；静止后由随机扫视接管。眨眼会继续叠加在当前转头和点头姿态上。</p>
+          </section>
+
+          <section>
+            <div className="section-title"><span>04</span><h2>手工曲面</h2></div>
             <Range label="脸部深度" value={surfaceSettings.faceDepth} min={0} max={100} step={1}
               onChange={(value) => setSurface('faceDepth', value)}></Range>
             <Range label="头发壳层" value={surfaceSettings.hairDepth} min={0} max={70} step={1}
