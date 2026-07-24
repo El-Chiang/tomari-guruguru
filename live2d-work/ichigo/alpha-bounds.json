@@ -1,0 +1,1612 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "Image pixels; origin at top-left; bbox width/height are inclusive extents.",
+  "alphaRule": "A pixel is included when alpha >= threshold (8-bit alpha, 0-255).",
+  "thresholds": [
+    1,
+    4,
+    16,
+    32,
+    64,
+    128,
+    254
+  ],
+  "recommendedThreshold": 32,
+  "recommendation": "Use alpha >= 32 for the first mesh crop. Lower thresholds contain canvas-edge outliers in several source layers; review alpha >= 16 manually when preserving very soft hair edges.",
+  "directories": [
+    "public/oc-layers",
+    "public/oc-mesh-layers"
+  ],
+  "layers": [
+    {
+      "path": "public/oc-layers/back_hair.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 315307
+        },
+        "4": {
+          "bbox": {
+            "x": 196,
+            "y": 4,
+            "width": 828,
+            "height": 1020
+          },
+          "pixelCount": 315150
+        },
+        "16": {
+          "bbox": {
+            "x": 196,
+            "y": 4,
+            "width": 648,
+            "height": 606
+          },
+          "pixelCount": 314632
+        },
+        "32": {
+          "bbox": {
+            "x": 196,
+            "y": 4,
+            "width": 648,
+            "height": 606
+          },
+          "pixelCount": 314088
+        },
+        "64": {
+          "bbox": {
+            "x": 197,
+            "y": 4,
+            "width": 647,
+            "height": 606
+          },
+          "pixelCount": 313182
+        },
+        "128": {
+          "bbox": {
+            "x": 197,
+            "y": 5,
+            "width": 646,
+            "height": 605
+          },
+          "pixelCount": 311726
+        },
+        "254": {
+          "bbox": {
+            "x": 198,
+            "y": 6,
+            "width": 644,
+            "height": 598
+          },
+          "pixelCount": 306043
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 196,
+          "y": 4,
+          "width": 648,
+          "height": 606
+        },
+        "pixelCount": 314088
+      },
+      "rgbaSha256": "51347b3dd7647d770de8efdc6169b2106b690d0b4ffcb2f6dc4603c665b22570"
+    },
+    {
+      "path": "public/oc-layers/ears.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 17753
+        },
+        "4": {
+          "bbox": {
+            "x": 0,
+            "y": 350,
+            "width": 1024,
+            "height": 674
+          },
+          "pixelCount": 17698
+        },
+        "16": {
+          "bbox": {
+            "x": 255,
+            "y": 350,
+            "width": 474,
+            "height": 129
+          },
+          "pixelCount": 17560
+        },
+        "32": {
+          "bbox": {
+            "x": 255,
+            "y": 350,
+            "width": 473,
+            "height": 129
+          },
+          "pixelCount": 17403
+        },
+        "64": {
+          "bbox": {
+            "x": 255,
+            "y": 351,
+            "width": 473,
+            "height": 128
+          },
+          "pixelCount": 17155
+        },
+        "128": {
+          "bbox": {
+            "x": 256,
+            "y": 351,
+            "width": 471,
+            "height": 127
+          },
+          "pixelCount": 16800
+        },
+        "254": {
+          "bbox": {
+            "x": 258,
+            "y": 352,
+            "width": 467,
+            "height": 124
+          },
+          "pixelCount": 15516
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 255,
+          "y": 350,
+          "width": 473,
+          "height": 129
+        },
+        "pixelCount": 17403
+      },
+      "rgbaSha256": "a8a53f302f23bd8b9b08262eafbade86e88b54237ad4561c42f905de46cd76a5"
+    },
+    {
+      "path": "public/oc-layers/eyebrow.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 141
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 721
+        },
+        "4": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 692
+        },
+        "16": {
+          "bbox": {
+            "x": 318,
+            "y": 294,
+            "width": 706,
+            "height": 730
+          },
+          "pixelCount": 594
+        },
+        "32": {
+          "bbox": {
+            "x": 321,
+            "y": 294,
+            "width": 322,
+            "height": 22
+          },
+          "pixelCount": 486
+        },
+        "64": {
+          "bbox": {
+            "x": 333,
+            "y": 294,
+            "width": 300,
+            "height": 17
+          },
+          "pixelCount": 312
+        },
+        "128": {
+          "bbox": {
+            "x": 395,
+            "y": 295,
+            "width": 187,
+            "height": 3
+          },
+          "pixelCount": 41
+        },
+        "254": {
+          "bbox": null,
+          "pixelCount": 0
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 321,
+          "y": 294,
+          "width": 322,
+          "height": 22
+        },
+        "pixelCount": 486
+      },
+      "rgbaSha256": "3f1f052bbf48151a467848b04cc5cd1d054181366c42b4f1ba25700534f5a1f1"
+    },
+    {
+      "path": "public/oc-layers/eyelash.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 345,
+            "width": 1024,
+            "height": 679
+          },
+          "pixelCount": 6217
+        },
+        "4": {
+          "bbox": {
+            "x": 0,
+            "y": 345,
+            "width": 1024,
+            "height": 679
+          },
+          "pixelCount": 6062
+        },
+        "16": {
+          "bbox": {
+            "x": 307,
+            "y": 345,
+            "width": 362,
+            "height": 84
+          },
+          "pixelCount": 5648
+        },
+        "32": {
+          "bbox": {
+            "x": 309,
+            "y": 345,
+            "width": 359,
+            "height": 83
+          },
+          "pixelCount": 5233
+        },
+        "64": {
+          "bbox": {
+            "x": 310,
+            "y": 346,
+            "width": 356,
+            "height": 82
+          },
+          "pixelCount": 4692
+        },
+        "128": {
+          "bbox": {
+            "x": 311,
+            "y": 346,
+            "width": 353,
+            "height": 82
+          },
+          "pixelCount": 3830
+        },
+        "254": {
+          "bbox": {
+            "x": 320,
+            "y": 355,
+            "width": 339,
+            "height": 41
+          },
+          "pixelCount": 1936
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 309,
+          "y": 345,
+          "width": 359,
+          "height": 83
+        },
+        "pixelCount": 5233
+      },
+      "rgbaSha256": "c7a71ab3501194a9246a06546cd504ef666f924adebb39567fd3795fe1161dad"
+    },
+    {
+      "path": "public/oc-layers/face.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 134125
+        },
+        "4": {
+          "bbox": {
+            "x": 294,
+            "y": 126,
+            "width": 730,
+            "height": 898
+          },
+          "pixelCount": 134012
+        },
+        "16": {
+          "bbox": {
+            "x": 294,
+            "y": 126,
+            "width": 389,
+            "height": 449
+          },
+          "pixelCount": 133713
+        },
+        "32": {
+          "bbox": {
+            "x": 295,
+            "y": 126,
+            "width": 387,
+            "height": 449
+          },
+          "pixelCount": 133421
+        },
+        "64": {
+          "bbox": {
+            "x": 295,
+            "y": 126,
+            "width": 387,
+            "height": 448
+          },
+          "pixelCount": 133041
+        },
+        "128": {
+          "bbox": {
+            "x": 296,
+            "y": 126,
+            "width": 385,
+            "height": 448
+          },
+          "pixelCount": 132348
+        },
+        "254": {
+          "bbox": {
+            "x": 297,
+            "y": 128,
+            "width": 383,
+            "height": 444
+          },
+          "pixelCount": 130285
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 295,
+          "y": 126,
+          "width": 387,
+          "height": 449
+        },
+        "pixelCount": 133421
+      },
+      "rgbaSha256": "f4ffcf1b9ab64a06d8e5d7ca6425d8fc498cf9ee7bd9bde0608a39bdfeb25092"
+    },
+    {
+      "path": "public/oc-layers/front_hair.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 163536
+        },
+        "4": {
+          "bbox": {
+            "x": 0,
+            "y": 31,
+            "width": 1024,
+            "height": 993
+          },
+          "pixelCount": 163255
+        },
+        "16": {
+          "bbox": {
+            "x": 226,
+            "y": 31,
+            "width": 488,
+            "height": 611
+          },
+          "pixelCount": 162276
+        },
+        "32": {
+          "bbox": {
+            "x": 226,
+            "y": 32,
+            "width": 488,
+            "height": 610
+          },
+          "pixelCount": 161231
+        },
+        "64": {
+          "bbox": {
+            "x": 227,
+            "y": 32,
+            "width": 486,
+            "height": 610
+          },
+          "pixelCount": 159689
+        },
+        "128": {
+          "bbox": {
+            "x": 227,
+            "y": 32,
+            "width": 486,
+            "height": 609
+          },
+          "pixelCount": 157028
+        },
+        "254": {
+          "bbox": {
+            "x": 229,
+            "y": 34,
+            "width": 482,
+            "height": 604
+          },
+          "pixelCount": 147562
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 226,
+          "y": 32,
+          "width": 488,
+          "height": 610
+        },
+        "pixelCount": 161231
+      },
+      "rgbaSha256": "6834ae5693dbd6d44f6a2e7e3dd8e71bea9d551aaf6823f3cac0973c85a50d4f"
+    },
+    {
+      "path": "public/oc-layers/headwear.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 616,
+            "y": 1,
+            "width": 408,
+            "height": 1023
+          },
+          "pixelCount": 1891
+        },
+        "4": {
+          "bbox": {
+            "x": 616,
+            "y": 1,
+            "width": 408,
+            "height": 1023
+          },
+          "pixelCount": 1866
+        },
+        "16": {
+          "bbox": {
+            "x": 616,
+            "y": 247,
+            "width": 408,
+            "height": 777
+          },
+          "pixelCount": 1784
+        },
+        "32": {
+          "bbox": {
+            "x": 617,
+            "y": 247,
+            "width": 60,
+            "height": 67
+          },
+          "pixelCount": 1712
+        },
+        "64": {
+          "bbox": {
+            "x": 617,
+            "y": 247,
+            "width": 59,
+            "height": 66
+          },
+          "pixelCount": 1605
+        },
+        "128": {
+          "bbox": {
+            "x": 617,
+            "y": 248,
+            "width": 59,
+            "height": 65
+          },
+          "pixelCount": 1446
+        },
+        "254": {
+          "bbox": {
+            "x": 620,
+            "y": 251,
+            "width": 53,
+            "height": 59
+          },
+          "pixelCount": 619
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 617,
+          "y": 247,
+          "width": 60,
+          "height": 67
+        },
+        "pixelCount": 1712
+      },
+      "rgbaSha256": "aedc4b02589a95f8ee6beb5658b38c033d735f8c35c29c3310965bc1383f8070"
+    },
+    {
+      "path": "public/oc-layers/irides.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 359,
+            "y": 362,
+            "width": 665,
+            "height": 662
+          },
+          "pixelCount": 7009
+        },
+        "4": {
+          "bbox": {
+            "x": 360,
+            "y": 363,
+            "width": 664,
+            "height": 661
+          },
+          "pixelCount": 6972
+        },
+        "16": {
+          "bbox": {
+            "x": 360,
+            "y": 363,
+            "width": 664,
+            "height": 661
+          },
+          "pixelCount": 6878
+        },
+        "32": {
+          "bbox": {
+            "x": 360,
+            "y": 363,
+            "width": 260,
+            "height": 64
+          },
+          "pixelCount": 6783
+        },
+        "64": {
+          "bbox": {
+            "x": 361,
+            "y": 364,
+            "width": 259,
+            "height": 63
+          },
+          "pixelCount": 6641
+        },
+        "128": {
+          "bbox": {
+            "x": 361,
+            "y": 364,
+            "width": 258,
+            "height": 62
+          },
+          "pixelCount": 6387
+        },
+        "254": {
+          "bbox": {
+            "x": 365,
+            "y": 366,
+            "width": 252,
+            "height": 58
+          },
+          "pixelCount": 5325
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 360,
+          "y": 363,
+          "width": 260,
+          "height": 64
+        },
+        "pixelCount": 6783
+      },
+      "rgbaSha256": "abfe20076d0f84d67878e39f724fd8f170a3ce5e62b68bd06f1aed6eb25d8f6e"
+    },
+    {
+      "path": "public/oc-layers/mouth.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 324
+        },
+        "4": {
+          "bbox": {
+            "x": 0,
+            "y": 505,
+            "width": 1024,
+            "height": 519
+          },
+          "pixelCount": 319
+        },
+        "16": {
+          "bbox": {
+            "x": 0,
+            "y": 505,
+            "width": 505,
+            "height": 516
+          },
+          "pixelCount": 302
+        },
+        "32": {
+          "bbox": {
+            "x": 478,
+            "y": 506,
+            "width": 27,
+            "height": 12
+          },
+          "pixelCount": 283
+        },
+        "64": {
+          "bbox": {
+            "x": 478,
+            "y": 506,
+            "width": 26,
+            "height": 12
+          },
+          "pixelCount": 268
+        },
+        "128": {
+          "bbox": {
+            "x": 479,
+            "y": 506,
+            "width": 25,
+            "height": 11
+          },
+          "pixelCount": 232
+        },
+        "254": {
+          "bbox": {
+            "x": 481,
+            "y": 508,
+            "width": 21,
+            "height": 8
+          },
+          "pixelCount": 117
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 478,
+          "y": 506,
+          "width": 27,
+          "height": 12
+        },
+        "pixelCount": 283
+      },
+      "rgbaSha256": "642059ce9336be64811f364abde88d71808d6fe467004ff3eef43c6487aeb312"
+    },
+    {
+      "path": "public/oc-layers/mouth_mid.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 476,
+            "y": 1,
+            "width": 548,
+            "height": 1023
+          },
+          "pixelCount": 667
+        },
+        "4": {
+          "bbox": {
+            "x": 476,
+            "y": 499,
+            "width": 548,
+            "height": 525
+          },
+          "pixelCount": 661
+        },
+        "16": {
+          "bbox": {
+            "x": 476,
+            "y": 500,
+            "width": 29,
+            "height": 28
+          },
+          "pixelCount": 638
+        },
+        "32": {
+          "bbox": {
+            "x": 477,
+            "y": 500,
+            "width": 28,
+            "height": 27
+          },
+          "pixelCount": 619
+        },
+        "64": {
+          "bbox": {
+            "x": 477,
+            "y": 500,
+            "width": 28,
+            "height": 27
+          },
+          "pixelCount": 591
+        },
+        "128": {
+          "bbox": {
+            "x": 477,
+            "y": 501,
+            "width": 27,
+            "height": 26
+          },
+          "pixelCount": 549
+        },
+        "254": {
+          "bbox": {
+            "x": 479,
+            "y": 504,
+            "width": 23,
+            "height": 21
+          },
+          "pixelCount": 384
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 477,
+          "y": 500,
+          "width": 28,
+          "height": 27
+        },
+        "pixelCount": 619
+      },
+      "rgbaSha256": "9e3241d467571d067ebcef4ed48afe8ed843753ffd5ba49c3881f02962e0bcb6"
+    },
+    {
+      "path": "public/oc-layers/neck.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 27031
+        },
+        "4": {
+          "bbox": {
+            "x": 401,
+            "y": 515,
+            "width": 623,
+            "height": 509
+          },
+          "pixelCount": 26999
+        },
+        "16": {
+          "bbox": {
+            "x": 401,
+            "y": 515,
+            "width": 187,
+            "height": 212
+          },
+          "pixelCount": 26888
+        },
+        "32": {
+          "bbox": {
+            "x": 402,
+            "y": 515,
+            "width": 185,
+            "height": 212
+          },
+          "pixelCount": 26780
+        },
+        "64": {
+          "bbox": {
+            "x": 402,
+            "y": 516,
+            "width": 185,
+            "height": 210
+          },
+          "pixelCount": 26612
+        },
+        "128": {
+          "bbox": {
+            "x": 403,
+            "y": 516,
+            "width": 183,
+            "height": 210
+          },
+          "pixelCount": 26331
+        },
+        "254": {
+          "bbox": {
+            "x": 404,
+            "y": 518,
+            "width": 180,
+            "height": 207
+          },
+          "pixelCount": 25413
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 402,
+          "y": 515,
+          "width": 185,
+          "height": 212
+        },
+        "pixelCount": 26780
+      },
+      "rgbaSha256": "10e30b530f35ef0027b58ea4691e174b2857b42b8c1fcadca7ed78788099a707"
+    },
+    {
+      "path": "public/oc-layers/nose.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 100
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 485,
+            "y": 458,
+            "width": 539,
+            "height": 566
+          },
+          "pixelCount": 34
+        },
+        "4": {
+          "bbox": {
+            "x": 485,
+            "y": 459,
+            "width": 539,
+            "height": 565
+          },
+          "pixelCount": 30
+        },
+        "16": {
+          "bbox": {
+            "x": 485,
+            "y": 459,
+            "width": 539,
+            "height": 565
+          },
+          "pixelCount": 27
+        },
+        "32": {
+          "bbox": {
+            "x": 486,
+            "y": 459,
+            "width": 5,
+            "height": 5
+          },
+          "pixelCount": 19
+        },
+        "64": {
+          "bbox": {
+            "x": 486,
+            "y": 460,
+            "width": 4,
+            "height": 4
+          },
+          "pixelCount": 13
+        },
+        "128": {
+          "bbox": null,
+          "pixelCount": 0
+        },
+        "254": {
+          "bbox": null,
+          "pixelCount": 0
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 486,
+          "y": 459,
+          "width": 5,
+          "height": 5
+        },
+        "pixelCount": 19
+      },
+      "rgbaSha256": "04a35f178c124e2ee656f9d3c097a2f43c2fb67faa1a383765b81cff36bc2213"
+    },
+    {
+      "path": "public/oc-layers/topwear.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 0,
+            "y": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "pixelCount": 87926
+        },
+        "4": {
+          "bbox": {
+            "x": 179,
+            "y": 543,
+            "width": 845,
+            "height": 481
+          },
+          "pixelCount": 87825
+        },
+        "16": {
+          "bbox": {
+            "x": 180,
+            "y": 543,
+            "width": 631,
+            "height": 225
+          },
+          "pixelCount": 87552
+        },
+        "32": {
+          "bbox": {
+            "x": 180,
+            "y": 543,
+            "width": 631,
+            "height": 225
+          },
+          "pixelCount": 87271
+        },
+        "64": {
+          "bbox": {
+            "x": 180,
+            "y": 543,
+            "width": 631,
+            "height": 224
+          },
+          "pixelCount": 86614
+        },
+        "128": {
+          "bbox": {
+            "x": 181,
+            "y": 544,
+            "width": 629,
+            "height": 223
+          },
+          "pixelCount": 85741
+        },
+        "254": {
+          "bbox": {
+            "x": 182,
+            "y": 545,
+            "width": 626,
+            "height": 221
+          },
+          "pixelCount": 82870
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 180,
+          "y": 543,
+          "width": 631,
+          "height": 225
+        },
+        "pixelCount": 87271
+      },
+      "rgbaSha256": "193a3bd4c0fdb865e4eb90bbf80991f28da80ceba9611ee83d98e778d9440489"
+    },
+    {
+      "path": "public/oc-mesh-layers/eyebrow_L.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 137
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 538,
+            "y": 293,
+            "width": 110,
+            "height": 22
+          },
+          "pixelCount": 311
+        },
+        "4": {
+          "bbox": {
+            "x": 538,
+            "y": 293,
+            "width": 110,
+            "height": 22
+          },
+          "pixelCount": 311
+        },
+        "16": {
+          "bbox": {
+            "x": 538,
+            "y": 294,
+            "width": 108,
+            "height": 20
+          },
+          "pixelCount": 264
+        },
+        "32": {
+          "bbox": {
+            "x": 539,
+            "y": 294,
+            "width": 104,
+            "height": 19
+          },
+          "pixelCount": 216
+        },
+        "64": {
+          "bbox": {
+            "x": 540,
+            "y": 294,
+            "width": 93,
+            "height": 15
+          },
+          "pixelCount": 135
+        },
+        "128": {
+          "bbox": {
+            "x": 561,
+            "y": 295,
+            "width": 21,
+            "height": 2
+          },
+          "pixelCount": 11
+        },
+        "254": {
+          "bbox": null,
+          "pixelCount": 0
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 539,
+          "y": 294,
+          "width": 104,
+          "height": 19
+        },
+        "pixelCount": 216
+      },
+      "rgbaSha256": "c177097ad593c26a4731faaecf319e8c36425be4b297dc3478a731bcc3780af2"
+    },
+    {
+      "path": "public/oc-mesh-layers/eyebrow_R.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 141
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 315,
+            "y": 294,
+            "width": 123,
+            "height": 25
+          },
+          "pixelCount": 384
+        },
+        "4": {
+          "bbox": {
+            "x": 316,
+            "y": 294,
+            "width": 122,
+            "height": 25
+          },
+          "pixelCount": 379
+        },
+        "16": {
+          "bbox": {
+            "x": 318,
+            "y": 294,
+            "width": 120,
+            "height": 24
+          },
+          "pixelCount": 329
+        },
+        "32": {
+          "bbox": {
+            "x": 321,
+            "y": 294,
+            "width": 116,
+            "height": 22
+          },
+          "pixelCount": 270
+        },
+        "64": {
+          "bbox": {
+            "x": 333,
+            "y": 294,
+            "width": 104,
+            "height": 17
+          },
+          "pixelCount": 177
+        },
+        "128": {
+          "bbox": {
+            "x": 395,
+            "y": 295,
+            "width": 39,
+            "height": 3
+          },
+          "pixelCount": 30
+        },
+        "254": {
+          "bbox": null,
+          "pixelCount": 0
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 321,
+          "y": 294,
+          "width": 116,
+          "height": 22
+        },
+        "pixelCount": 270
+      },
+      "rgbaSha256": "a8d2c70f36ca493d6c2a3c54f4920404ef6cc3b561053c98377ef855c868c172"
+    },
+    {
+      "path": "public/oc-mesh-layers/eyelash_L.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 543,
+            "y": 345,
+            "width": 126,
+            "height": 83
+          },
+          "pixelCount": 3097
+        },
+        "4": {
+          "bbox": {
+            "x": 543,
+            "y": 345,
+            "width": 126,
+            "height": 83
+          },
+          "pixelCount": 3070
+        },
+        "16": {
+          "bbox": {
+            "x": 544,
+            "y": 345,
+            "width": 125,
+            "height": 83
+          },
+          "pixelCount": 2850
+        },
+        "32": {
+          "bbox": {
+            "x": 544,
+            "y": 345,
+            "width": 124,
+            "height": 83
+          },
+          "pixelCount": 2640
+        },
+        "64": {
+          "bbox": {
+            "x": 546,
+            "y": 346,
+            "width": 120,
+            "height": 82
+          },
+          "pixelCount": 2361
+        },
+        "128": {
+          "bbox": {
+            "x": 547,
+            "y": 346,
+            "width": 117,
+            "height": 81
+          },
+          "pixelCount": 1950
+        },
+        "254": {
+          "bbox": {
+            "x": 552,
+            "y": 356,
+            "width": 107,
+            "height": 40
+          },
+          "pixelCount": 1004
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 544,
+          "y": 345,
+          "width": 124,
+          "height": 83
+        },
+        "pixelCount": 2640
+      },
+      "rgbaSha256": "8f97d298d7b453aa538e24fbc90c6e01824cbbaa99be19d5a305744fcaed2bdf"
+    },
+    {
+      "path": "public/oc-mesh-layers/eyelash_R.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 307,
+            "y": 349,
+            "width": 130,
+            "height": 80
+          },
+          "pixelCount": 3014
+        },
+        "4": {
+          "bbox": {
+            "x": 307,
+            "y": 349,
+            "width": 130,
+            "height": 80
+          },
+          "pixelCount": 2990
+        },
+        "16": {
+          "bbox": {
+            "x": 307,
+            "y": 349,
+            "width": 130,
+            "height": 80
+          },
+          "pixelCount": 2798
+        },
+        "32": {
+          "bbox": {
+            "x": 309,
+            "y": 349,
+            "width": 128,
+            "height": 79
+          },
+          "pixelCount": 2593
+        },
+        "64": {
+          "bbox": {
+            "x": 310,
+            "y": 350,
+            "width": 126,
+            "height": 78
+          },
+          "pixelCount": 2331
+        },
+        "128": {
+          "bbox": {
+            "x": 311,
+            "y": 350,
+            "width": 124,
+            "height": 78
+          },
+          "pixelCount": 1880
+        },
+        "254": {
+          "bbox": {
+            "x": 320,
+            "y": 355,
+            "width": 109,
+            "height": 40
+          },
+          "pixelCount": 932
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 309,
+          "y": 349,
+          "width": 128,
+          "height": 79
+        },
+        "pixelCount": 2593
+      },
+      "rgbaSha256": "56eec3782fd6ff0c2cfbdca5653ab2093b45921369f664b2ff7a08bc4c3a56b4"
+    },
+    {
+      "path": "public/oc-mesh-layers/irides_L.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 554,
+            "y": 363,
+            "width": 67,
+            "height": 64
+          },
+          "pixelCount": 3633
+        },
+        "4": {
+          "bbox": {
+            "x": 554,
+            "y": 363,
+            "width": 67,
+            "height": 64
+          },
+          "pixelCount": 3631
+        },
+        "16": {
+          "bbox": {
+            "x": 554,
+            "y": 363,
+            "width": 67,
+            "height": 64
+          },
+          "pixelCount": 3588
+        },
+        "32": {
+          "bbox": {
+            "x": 554,
+            "y": 363,
+            "width": 66,
+            "height": 64
+          },
+          "pixelCount": 3528
+        },
+        "64": {
+          "bbox": {
+            "x": 555,
+            "y": 364,
+            "width": 65,
+            "height": 63
+          },
+          "pixelCount": 3459
+        },
+        "128": {
+          "bbox": {
+            "x": 555,
+            "y": 364,
+            "width": 64,
+            "height": 62
+          },
+          "pixelCount": 3331
+        },
+        "254": {
+          "bbox": {
+            "x": 557,
+            "y": 366,
+            "width": 60,
+            "height": 58
+          },
+          "pixelCount": 2854
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 554,
+          "y": 363,
+          "width": 66,
+          "height": 64
+        },
+        "pixelCount": 3528
+      },
+      "rgbaSha256": "499a986ebb222fc32b0131a8e8b1f6a517f8c538b67e6ab287a245c19385cb12"
+    },
+    {
+      "path": "public/oc-mesh-layers/irides_R.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": {
+        "min": 0,
+        "max": 255
+      },
+      "thresholds": {
+        "1": {
+          "bbox": {
+            "x": 360,
+            "y": 366,
+            "width": 65,
+            "height": 62
+          },
+          "pixelCount": 3345
+        },
+        "4": {
+          "bbox": {
+            "x": 360,
+            "y": 366,
+            "width": 65,
+            "height": 62
+          },
+          "pixelCount": 3340
+        },
+        "16": {
+          "bbox": {
+            "x": 360,
+            "y": 367,
+            "width": 65,
+            "height": 60
+          },
+          "pixelCount": 3289
+        },
+        "32": {
+          "bbox": {
+            "x": 360,
+            "y": 367,
+            "width": 65,
+            "height": 60
+          },
+          "pixelCount": 3255
+        },
+        "64": {
+          "bbox": {
+            "x": 361,
+            "y": 367,
+            "width": 64,
+            "height": 60
+          },
+          "pixelCount": 3182
+        },
+        "128": {
+          "bbox": {
+            "x": 361,
+            "y": 368,
+            "width": 63,
+            "height": 58
+          },
+          "pixelCount": 3056
+        },
+        "254": {
+          "bbox": {
+            "x": 365,
+            "y": 370,
+            "width": 56,
+            "height": 54
+          },
+          "pixelCount": 2471
+        }
+      },
+      "recommendedThreshold": 32,
+      "recommendedBounds": {
+        "bbox": {
+          "x": 360,
+          "y": 367,
+          "width": 65,
+          "height": 60
+        },
+        "pixelCount": 3255
+      },
+      "rgbaSha256": "72badd5d780c0dbe9f638304aab37bb645f20dcc03655d3f952c6a54a9ee6608"
+    }
+  ]
+}

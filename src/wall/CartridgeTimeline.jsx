@@ -1,0 +1,215 @@
+import React from 'react';
+
+const { useState, useCallback, useRef, useLayoutEffect } = React;
+
+import asset from './wall-asset';
+import useEdgeFade, { edgeFadeMask } from './useEdgeFade';
+
+// カセット時間軸。Figma の GAME CARD(node 1:201) のカセット写真を流用 ——
+// ラベル窓(元は Xenogears のアート部分)をピクセル実測して透過で打ち抜いた
+// cart-shell.png を上に重ね、下層の Steam カバーが窓から覗く構造。
+// カバーの縦横比は問わない(object-fit: cover でクロップされるだけ)。
+//
+// 演出: 入場時に月ごと左から順に「上からストンと差し込まれる」、hover で
+// 傾きが直って浮き上がり、名前+プレイ時間のツールチップが出る。
+// 横幅が収まらないときはこのストリップだけが横スクロールする(端は fade)。
+
+// cart-raw.png(320x460) 上のラベル窓実測値: x 22..298, y 26..364
+// (cart-red-raw.png も同版式なので窓座標は共通)
+const CART = { width: 66, height: 95 };
+// カセット殻のバリエーション: 黒=Steam(既定)、赤=Nintendo(Figma node 1:204)
+// ※ -signed = 底部銘板(DF-GAME-PS / DF-GAME-STEAM)入りのオリジナル版。
+//   CDN の alias は上書き不可なので、涂り消し版から戻す際に別名で再アップした。
+const SHELLS = {
+  default: 'wall/carts/cart-shell-signed.png',
+  red: 'wall/carts/cart-shell-red-signed.png',
+};
+const LABEL = {
+  left: (22 / 320) * 100 + '%',
+  top: (26 / 460) * 100 + '%',
+  width: ((298 - 22) / 320) * 100 + '%',
+  height: ((364 - 26) / 460) * 100 + '%',
+};
+// 差し込み角度: index で決まる疑似ランダム(再現性があって並びが安定する)
+const ROTATIONS = [-4, 3, -2, 4.5, -3.5, 2.5];
+
+const font = "'IBM Plex Sans SC', sans-serif";
+
+function Cartridge({ game, order, onHover }) {
+  const rot = ROTATIONS[order % ROTATIONS.length];
+  const body = (
+    <div className="wall-cart-drop" style={{ animationDelay: `${order * 90}ms` }}>
+      <div
+        className="wall-cart"
+        onPointerEnter={(e) => onHover(game, e.currentTarget)}
+        onPointerLeave={() => onHover(null)}
+        style={{
+          position: 'relative', width: CART.width, height: CART.height,
+          '--rot': `${rot}deg`, transform: `rotate(${rot}deg)`,
+          filter: 'drop-shadow(0px 3px 4px rgba(0,0,0,0.35))',
+        }}
+      >
+        <img
+          src={asset(game.cover)} alt={game.name}
+          style={{
+            position: 'absolute', left: LABEL.left, top: LABEL.top,
+            width: LABEL.width, height: LABEL.height, objectFit: 'cover',
+          }}
+        />
+        <img
+          src={asset(SHELLS[game.shell] ?? SHELLS.default)} alt=""
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+        />
+      </div>
+    </div>
+  );
+  if (!game.url) return <div>{body}</div>;
+  return (
+    <a href={game.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+      {body}
+    </a>
+  );
+}
+
+// ツールチップ。カセットの中に置くとスクロール容器の overflow/mask に
+// 切られる(帯の両端で見切れるバグ)ので、fixed でビューポート基準に浮かせ、
+// 左右は画面内にクランプする。位置は hover したカセットの矩形から計算。
+function CartTip({ tip }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const pad = 8;
+    const half = el.offsetWidth / 2;
+    const x = Math.max(pad + half, Math.min(window.innerWidth - pad - half, tip.x));
+    el.style.left = `${x}px`;
+  }, [tip]);
+  const { game } = tip;
+  return (
+    <div ref={ref} className="wall-cart-tip" style={{
+      position: 'fixed', left: tip.x, top: tip.y,
+      transform: 'translate(-50%, -100%)', zIndex: 10,
+      background: 'rgba(28,28,28,0.92)', color: '#eee', borderRadius: 4,
+      padding: '4px 8px', whiteSpace: 'nowrap', pointerEvents: 'none',
+      fontFamily: font, fontSize: 10, lineHeight: 1.5, textAlign: 'center',
+    }}>
+      <span style={{ fontWeight: 500 }}>{game.name}</span>
+      {(game.hours != null || game.note) && (
+        <span style={{ color: 'rgba(255,255,255,0.55)', marginLeft: 6 }}>
+          {game.hours != null ? `${game.hours}h` : game.note}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MonthCluster({ month, games, startOrder, onHover }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '0 0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+        {games.map((g, i) => <Cartridge key={g.appid ?? g.name} game={g} order={startOrder + i} onHover={onHover} />)}
+      </div>
+      {/* 時間軸との接点: 目盛り+月ラベル */}
+      <div style={{ width: 1, height: 8, background: 'rgba(0,0,0,0.35)', marginTop: 10 }} />
+      <p style={{
+        margin: '4px 0 0', fontFamily: "'Fraunces', serif", fontWeight: 600,
+        fontSize: 12, color: 'rgba(0,0,0,0.55)',
+      }}>
+        {month}
+      </p>
+    </div>
+  );
+}
+
+export default function CartridgeTimeline({ months }) {
+  const { ref, fade, update } = useEdgeFade();
+  const [tip, setTip] = useState(null);
+  // hover したカセットの矩形からツールチップ位置を決める。
+  // タッチ環境(hover なし)では出さない — tap は即リンク遷移するので意味がないため。
+  const onHover = useCallback((game, el) => {
+    if (!game || !window.matchMedia('(hover: hover)').matches) { setTip(null); return; }
+    const r = el.getBoundingClientRect();
+    // hover でカセットが -9px 持ち上がる(+scale)ので、その分の逃げを取る
+    setTip({ game, x: r.left + r.width / 2, y: r.top - 16 });
+  }, []);
+  const onScroll = useCallback(() => { update(); setTip(null); }, [update]);
+  if (!months || !months.length) return null;
+  let order = 0;
+  const clusters = months.map((m) => {
+    const c = <MonthCluster key={m.month} month={m.month} games={m.games} startOrder={order} onHover={onHover} />;
+    order += m.games.length;
+    return c;
+  });
+  // 時間軸の横線は カセット下端(=クラスタ内の目盛り開始位置) に合わせる:
+  // tooltip 用の上余白 + カセット高 + 目盛りマージンの途中。
+  const TIP_PAD = 34;
+  const axisTop = TIP_PAD + CART.height + 14;
+  return (
+    <div style={{ position: 'relative' }}>
+      <p style={{
+        margin: '0 0 4px', fontFamily: "'Fraunces', serif", fontWeight: 600,
+        fontSize: 20, color: 'rgba(0,0,0,0.8)',
+      }}>
+        2026 タイムライン
+      </p>
+      <p style={{
+        margin: 0, fontFamily: font, fontSize: 10, color: 'rgba(0,0,0,0.4)',
+      }}>
+        今年遊んだゲームのカセット棚<span className="wall-tl-hint"> · hoverで詳細</span>
+      </p>
+      {tip && <CartTip key={tip.game.appid ?? tip.game.name} tip={tip} />}
+      <div
+        ref={ref} className="wall-tape-scroll" onScroll={onScroll}
+        style={{
+          overflowX: 'auto', overflowY: 'hidden',
+          WebkitMaskImage: edgeFadeMask(fade),
+          maskImage: edgeFadeMask(fade),
+        }}
+      >
+        <div style={{
+          position: 'relative', display: 'inline-flex', alignItems: 'flex-end',
+          gap: 34, paddingTop: TIP_PAD, paddingBottom: 4, paddingRight: 8,
+        }}>
+          {/* 連続した時間軸の横線(スクロール内容の全幅に伸びる) */}
+          <div style={{
+            position: 'absolute', left: 0, right: 0, top: axisTop,
+            height: 1, background: 'rgba(0,0,0,0.25)',
+          }} />
+          {clusters}
+        </div>
+      </div>
+      <style>{`
+        /* スクロールバーは出さない(はみ出しは端の fade とホイール横スクロールで伝える) */
+        .wall-tape-scroll { scrollbar-width: none; }
+        .wall-tape-scroll::-webkit-scrollbar { display: none; }
+
+        /* hover が無いデバイス(タッチ)では hover 前提の説明を出さない */
+        @media (hover: none) {
+          .wall-tl-hint { display: none; }
+        }
+
+        .wall-cart { transition: transform 240ms cubic-bezier(0.34, 1.45, 0.64, 1), filter 240ms ease; }
+        a:hover .wall-cart, div:hover > .wall-cart-drop .wall-cart {
+          transform: rotate(0deg) translateY(-9px) scale(1.06);
+          filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.3));
+          z-index: 2;
+        }
+        .wall-cart-tip { animation: tipIn 160ms ease 60ms backwards; }
+        @keyframes tipIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+          .wall-cart-drop {
+            animation: cartDrop 480ms cubic-bezier(0.22, 1.2, 0.36, 1) backwards;
+          }
+          @keyframes cartDrop {
+            from { transform: translateY(-30px); opacity: 0; }
+            to   { transform: translateY(0);     opacity: 1; }
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

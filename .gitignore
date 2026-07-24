@@ -9,9 +9,17 @@ __pycache__/
 *.pyc
 node_modules/
 dist/
+dist-aipages/
+dist-standalone/
 public/*
 !public/slices2/
 !public/slices_oc/
 !public/oc-layers/
+!public/oc-mesh-layers/
+!public/wall/
 .DS_Store
 Thumbs.db
+
+# 一時生成プレビュー / 成果物
+slices_peek.png
+.vercel

@@ -1,0 +1,237 @@
+/**
+ * DOM-free mesh geometry helpers used by the 2.5D character renderer.
+ *
+ * Coordinates are right-handed: +X points right, +Y points up and +Z points
+ * toward the camera. Arrays are returned as typed arrays so they can be passed
+ * directly to a WebGL/Three.js buffer without this module depending on Three.
+ */
+
+function assertFiniteNumber(value, name) {
+  if (!Number.isFinite(value)) throw new TypeError(`${name} must be a finite number`);
+}
+
+function assertPositiveInteger(value, name) {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new RangeError(`${name} must be an integer greater than or equal to 1`);
+  }
+}
+
+function assertXYZArray(value, name) {
+  if (!value || typeof value.length !== 'number' || value.length % 3 !== 0) {
+    throw new TypeError(`${name} must be an array-like value whose length is divisible by 3`);
+  }
+}
+
+function resolveGridSize(options) {
+  const columns = options.columns ?? options.cols;
+  const rows = options.rows;
+  assertPositiveInteger(columns, 'columns');
+  assertPositiveInteger(rows, 'rows');
+  return { columns, rows };
+}
+
+/**
+ * Normalize an array or object crop to `{ x, y, width, height }`.
+ *
+ * @param {number[]|{x:number,y:number,width:number,height:number}|undefined} crop
+ * @param {{textureWidth?:number,textureHeight?:number,width?:number,height?:number}} [fallback]
+ * @returns {{x:number,y:number,width:number,height:number}}
+ */
+export function normalizeCrop(crop, fallback = {}) {
+  let normalized;
+  if (crop == null) {
+    normalized = {
+      x: 0,
+      y: 0,
+      width: fallback.width ?? fallback.textureWidth,
+      height: fallback.height ?? fallback.textureHeight,
+    };
+  } else if (Array.isArray(crop) || ArrayBuffer.isView(crop)) {
+    if (crop.length !== 4) throw new TypeError('crop array must contain [x, y, width, height]');
+    normalized = { x: crop[0], y: crop[1], width: crop[2], height: crop[3] };
+  } else {
+    normalized = {
+      x: crop.x,
+      y: crop.y,
+      width: crop.width,
+      height: crop.height,
+    };
+  }
+
+  for (const name of ['x', 'y', 'width', 'height']) {
+    assertFiniteNumber(normalized[name], `crop.${name}`);
+  }
+  if (normalized.width <= 0 || normalized.height <= 0) {
+    throw new RangeError('crop width and height must be greater than 0');
+  }
+  return normalized;
+}
+
+/**
+ * Create normalized texture coordinates for a regular grid over a pixel crop.
+ * `flipV=true` converts top-left image coordinates to WebGL's bottom-left V.
+ *
+ * @param {{columns?:number,cols?:number,rows:number,crop?:number[]|object,
+ *   textureWidth?:number,textureHeight?:number,flipV?:boolean,width?:number,height?:number}} options
+ * @returns {Float32Array}
+ */
+export function createGridUVs(options) {
+  const { columns, rows } = resolveGridSize(options);
+  const textureWidth = options.textureWidth ?? options.width;
+  const textureHeight = options.textureHeight ?? options.height;
+  assertFiniteNumber(textureWidth, 'textureWidth');
+  assertFiniteNumber(textureHeight, 'textureHeight');
+  if (textureWidth <= 0 || textureHeight <= 0) {
+    throw new RangeError('textureWidth and textureHeight must be greater than 0');
+  }
+  const crop = normalizeCrop(options.crop, { textureWidth, textureHeight });
+  const flipV = options.flipV !== false;
+  const uvs = new Float32Array((columns + 1) * (rows + 1) * 2);
+
+  let offset = 0;
+  for (let row = 0; row <= rows; row += 1) {
+    const y = crop.y + crop.height * (row / rows);
+    for (let column = 0; column <= columns; column += 1) {
+      const x = crop.x + crop.width * (column / columns);
+      uvs[offset] = x / textureWidth;
+      const imageV = y / textureHeight;
+      uvs[offset + 1] = flipV ? 1 - imageV : imageV;
+      offset += 2;
+    }
+  }
+  return uvs;
+}
+
+/**
+ * Create two counter-clockwise triangles per grid cell.
+ *
+ * @param {{columns?:number,cols?:number,rows:number}} options
+ * @returns {Uint16Array|Uint32Array}
+ */
+export function createGridIndices(options) {
+  const { columns, rows } = resolveGridSize(options);
+  const vertexCount = (columns + 1) * (rows + 1);
+  const IndexArray = vertexCount > 65535 ? Uint32Array : Uint16Array;
+  const indices = new IndexArray(columns * rows * 6);
+  let offset = 0;
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const topLeft = row * (columns + 1) + column;
+      const topRight = topLeft + 1;
+      const bottomLeft = topLeft + columns + 1;
+      const bottomRight = bottomLeft + 1;
+      indices.set([topLeft, bottomLeft, topRight, topRight, bottomLeft, bottomRight], offset);
+      offset += 6;
+    }
+  }
+  return indices;
+}
+
+/**
+ * Create a centered XY regular grid, its crop UVs and triangle indices.
+ *
+ * Image-space crop coordinates use a top-left origin. World Y is flipped so
+ * it points upward. By default the world origin is the texture centre.
+ *
+ * @param {{columns?:number,cols?:number,rows:number,crop?:number[]|object,
+ *   textureWidth?:number,textureHeight?:number,width?:number,height?:number,
+ *   originX?:number,originY?:number,flipY?:boolean,flipV?:boolean}} options
+ * @returns {{positions:Float32Array,uvs:Float32Array,indices:Uint16Array|Uint32Array,
+ *   imagePoints:Float32Array,columns:number,rows:number,vertexCount:number}}
+ */
+export function createGridGeometry(options) {
+  const { columns, rows } = resolveGridSize(options);
+  const textureWidth = options.textureWidth ?? options.width;
+  const textureHeight = options.textureHeight ?? options.height;
+  assertFiniteNumber(textureWidth, 'textureWidth');
+  assertFiniteNumber(textureHeight, 'textureHeight');
+  if (textureWidth <= 0 || textureHeight <= 0) {
+    throw new RangeError('textureWidth and textureHeight must be greater than 0');
+  }
+  const crop = normalizeCrop(options.crop, { textureWidth, textureHeight });
+  const originX = options.originX ?? textureWidth / 2;
+  const originY = options.originY ?? textureHeight / 2;
+  const flipY = options.flipY !== false;
+  assertFiniteNumber(originX, 'originX');
+  assertFiniteNumber(originY, 'originY');
+
+  const vertexCount = (columns + 1) * (rows + 1);
+  const positions = new Float32Array(vertexCount * 3);
+  const imagePoints = new Float32Array(vertexCount * 2);
+  let positionOffset = 0;
+  let imageOffset = 0;
+
+  for (let row = 0; row <= rows; row += 1) {
+    const imageY = crop.y + crop.height * (row / rows);
+    for (let column = 0; column <= columns; column += 1) {
+      const imageX = crop.x + crop.width * (column / columns);
+      positions[positionOffset] = imageX - originX;
+      positions[positionOffset + 1] = flipY ? originY - imageY : imageY - originY;
+      positions[positionOffset + 2] = 0;
+      imagePoints[imageOffset] = imageX;
+      imagePoints[imageOffset + 1] = imageY;
+      positionOffset += 3;
+      imageOffset += 2;
+    }
+  }
+
+  return {
+    positions,
+    uvs: createGridUVs({ ...options, columns, rows, textureWidth, textureHeight }),
+    indices: createGridIndices({ columns, rows }),
+    imagePoints,
+    columns,
+    rows,
+    vertexCount,
+  };
+}
+
+function resolveKeyShape(keyShapes, numericKey, namedKey) {
+  return keyShapes[numericKey] ?? keyShapes[String(numericKey)] ?? keyShapes[namedKey];
+}
+
+/**
+ * Interpolate `-1 → 0 → +1` key shapes in two linear segments.
+ *
+ * Shapes are XYZ arrays. In the default `offset` mode they are corrections
+ * added to `basePositions`; in `positions` mode they are absolute vertices.
+ * Missing endpoint shapes fall back to the neutral shape. A missing neutral
+ * shape means zero correction in offset mode, or the base in positions mode.
+ *
+ * @param {ArrayLike<number>} basePositions
+ * @param {{'-1'?:ArrayLike<number>,0?:ArrayLike<number>,1?:ArrayLike<number>,
+ *   negative?:ArrayLike<number>,neutral?:ArrayLike<number>,positive?:ArrayLike<number>}} keyShapes
+ * @param {number} value normalized yaw/key parameter
+ * @param {{mode?:'offset'|'positions',clamp?:boolean}} [options]
+ * @returns {Float32Array}
+ */
+export function interpolateKeyShapes(basePositions, keyShapes, value, options = {}) {
+  assertXYZArray(basePositions, 'basePositions');
+  assertFiniteNumber(value, 'value');
+  const mode = options.mode ?? 'offset';
+  if (mode !== 'offset' && mode !== 'positions') {
+    throw new TypeError("mode must be either 'offset' or 'positions'");
+  }
+  const parameter = options.clamp === false ? value : Math.max(-1, Math.min(1, value));
+  const neutralFallback = mode === 'offset' ? new Float32Array(basePositions.length) : basePositions;
+  const neutral = resolveKeyShape(keyShapes, 0, 'neutral') ?? neutralFallback;
+  const negative = resolveKeyShape(keyShapes, -1, 'negative') ?? neutral;
+  const positive = resolveKeyShape(keyShapes, 1, 'positive') ?? neutral;
+  for (const [shape, name] of [[negative, 'negative'], [neutral, 'neutral'], [positive, 'positive']]) {
+    assertXYZArray(shape, `${name} key shape`);
+    if (shape.length !== basePositions.length) {
+      throw new RangeError(`${name} key shape length must match basePositions`);
+    }
+  }
+
+  const from = parameter < 0 ? negative : neutral;
+  const to = parameter < 0 ? neutral : positive;
+  const t = parameter < 0 ? parameter + 1 : parameter;
+  const result = new Float32Array(basePositions.length);
+  for (let index = 0; index < result.length; index += 1) {
+    const interpolated = from[index] + (to[index] - from[index]) * t;
+    result[index] = mode === 'offset' ? basePositions[index] + interpolated : interpolated;
+  }
+  return result;
+}

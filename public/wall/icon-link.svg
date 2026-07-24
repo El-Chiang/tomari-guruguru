@@ -1,0 +1,16 @@
+<svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="ART TEXT">
+<g id="Frame 4">
+<g id="LinkSimple" clip-path="url(#clip0_0_1)">
+<path id="Vector" d="M3.75 6.25L6.25 3.75" stroke="black" stroke-opacity="0.6" style="stroke:black;stroke-opacity:0.6;" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M4.375 2.97305L5.54922 1.80118C5.90182 1.45428 6.37721 1.26076 6.87184 1.26277C7.36647 1.26479 7.84027 1.46217 8.19003 1.81193C8.53979 2.16169 8.73717 2.63549 8.73919 3.13012C8.7412 3.62475 8.54768 4.10014 8.20078 4.45274L7.02656 5.62501" stroke="black" stroke-opacity="0.6" style="stroke:black;stroke-opacity:0.6;" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M2.97305 4.375L1.80118 5.54922C1.45428 5.90182 1.26076 6.37721 1.26277 6.87184C1.26479 7.36647 1.46217 7.84027 1.81193 8.19003C2.16169 8.53979 2.63549 8.73717 3.13012 8.73919C3.62475 8.7412 4.10014 8.54768 4.45274 8.20078L5.62501 7.02656" stroke="black" stroke-opacity="0.6" style="stroke:black;stroke-opacity:0.6;" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_1">
+<rect width="10" height="10" fill="white" style="fill:white;fill-opacity:1;"/>
+</clipPath>
+</defs>
+</svg>

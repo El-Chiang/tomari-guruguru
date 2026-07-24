@@ -16,7 +16,9 @@
 //   単位にかかる。
 
 export default {
-  basePath: 'oc-layers',
+  // 画眉 CDN にアップロード済み（alpha 去噪後の 13 層すべて）。
+  // ローカル相対パスに戻す場合は 'oc-layers' に変更
+  basePath: 'https://mdn.alipayobjects.com/huamei_toj2z8/uri/file/as/tomari-guruguru/oc-layers',
   ext: 'webp',
 
   // 奥 → 手前。z順: 体(後ろ髪・服) → 首 → 頭。
