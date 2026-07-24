@@ -47,3 +47,34 @@ Implemented the first web HeadPitch pass on top of the existing HeadYaw mesh pro
 - The morph origin follows the posed pitch offset the same way the blink center does, so lip flaps stay aligned while nodding.
 - `MotionDirector` gained a lip-flap source with the oc-live cadence (70–160 ms targets, 15% closures, otherwise 0.35–1) and a frame-rate independent smoothing equivalent to the old 0.35-per-frame lerp.
 - The manual openness slider pauses the automatic lip flap, mirroring the HeadRoll manual/auto interaction; `autoTalk` stays off by default and the smoothed target remains the hook for future volume-driven speech.
+
+## 2026-07-24 — mesh-live CR and reuse refactor
+
+Reviewed the whole `src/mesh-live/` module and restructured it so the L2D
+capability can be reused outside the mesh-turn demo page. Three commits, each
+visually regressed against the endpoint poses:
+
+- **geometry slimming**: dropped the never-wired composition pipeline
+  (`composeHeadPose`, rotate/ellipsoid/corner-residual helpers, ~430 lines with
+  tests). The renderer's real path is THREE group rotations + its own surface
+  sampling; keeping a parallel unused implementation only risked drift.
+  Recoverable from git history if a DOM-free composer is ever needed.
+- **engine/model split**: `MeshCharacterRenderer` now takes an injected model
+  contract — layers, pivots, limits, surface ellipses, per-surface depth
+  weights, eye-motion tuning and the two art-directed key-shape builders.
+  Everything Ichigo-specific lives in `ichigo-model.js` (exported as
+  `ICHIGO_MODEL`); a new character is a new model file, not engine changes.
+- **CharacterRig driver**: owns ParameterController + MotionDirector, composes
+  manual normalized poses with automatic motion and runs the rAF loop.
+  Embedding the character elsewhere is now
+  `rig.start(params => renderer.update(params))` plus the `MeshCharacter`
+  React wrapper with a `model` prop.
+
+### Deviations
+
+- The corner-residual math recorded as "implemented but zero" in the HeadPitch
+  notes was deleted with the unwired pipeline; re-add it as authored model data
+  if a diagonal artifact ever demands it.
+- `clamp` remains duplicated in motion-controller (private) and
+  parameter-controller (exported): accepted duplication to keep both modules
+  dependency-free rather than introducing a shared util for one function.
