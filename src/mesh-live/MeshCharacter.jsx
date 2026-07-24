@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react
 import { MeshCharacterRenderer } from './renderer';
 
 const MeshCharacter = forwardRef(function MeshCharacter({
+  model,
   mode,
   wireframe,
   surfaceSettings,
@@ -25,7 +26,7 @@ const MeshCharacter = forwardRef(function MeshCharacter({
     const host = hostRef.current;
     if (!host) return undefined;
 
-    const renderer = new MeshCharacterRenderer(host, { onStats });
+    const renderer = new MeshCharacterRenderer(host, { model, onStats });
     rendererRef.current = renderer;
     let alive = true;
 

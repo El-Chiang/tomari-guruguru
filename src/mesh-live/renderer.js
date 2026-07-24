@@ -1,33 +1,16 @@
 import * as THREE from 'three';
-import {
-  DEFAULT_SURFACE_SETTINGS,
-  EYE_TURN_SETTINGS,
-  HEAD_PIVOT_IMAGE,
-  HEAD_ROLL_PIVOT_IMAGE,
-  ICHIGO_LAYERS,
-  MODEL_SIZE,
-  PITCH_DOWN_LIMIT_DEG,
-  PITCH_UP_LIMIT_DEG,
-  ROLL_LIMIT_DEG,
-  YAW_LIMIT_DEG,
-} from './ichigo-model';
 import { createGridGeometry, interpolateKeyShapes } from './geometry';
 
-const HALF_MODEL = MODEL_SIZE / 2;
-const HEAD_YAW_RADIANS = THREE.MathUtils.degToRad(YAW_LIMIT_DEG);
-const HEAD_PITCH_UP_RADIANS = THREE.MathUtils.degToRad(PITCH_UP_LIMIT_DEG);
-const HEAD_PITCH_DOWN_RADIANS = THREE.MathUtils.degToRad(PITCH_DOWN_LIMIT_DEG);
-const HEAD_ROLL_RADIANS = THREE.MathUtils.degToRad(ROLL_LIMIT_DEG);
-const HEAD_PIVOT_X = HEAD_PIVOT_IMAGE.x - HALF_MODEL;
-const HEAD_PIVOT_Y = HALF_MODEL - HEAD_PIVOT_IMAGE.y;
-const HEAD_ROLL_PIVOT_X = HEAD_ROLL_PIVOT_IMAGE.x - HALF_MODEL;
-const HEAD_ROLL_PIVOT_Y = HALF_MODEL - HEAD_ROLL_PIVOT_IMAGE.y;
-const FACE_SURFACE = Object.freeze({ centerX: 489, centerY: 365, radiusX: 265, radiusY: 340 });
-const HAIR_SURFACE = Object.freeze({ centerX: 489, centerY: 340, radiusX: 330, radiusY: 390 });
-
-function assetUrl(path) {
-  return `${import.meta.env.BASE_URL}${path}`;
-}
+/**
+ * Generic 2.5D mesh character renderer.
+ *
+ * All character-specific data — layers, pivots, pose limits, surface
+ * ellipses, depth weights and the art-directed key-shape builders — comes in
+ * through the injected `model` contract (see ichigo-model.js for the shape).
+ * The renderer itself only knows the generic mechanics: grid meshes, key-shape
+ * interpolation, group rotations and the per-layer feature behaviours that are
+ * declared in layer data (eye, iris, eyelash, mouthMorph, hairMotion).
+ */
 
 function sampleSurface(imageX, imageY, surface) {
   const nx = (imageX - surface.centerX) / surface.radiusX;
@@ -35,123 +18,34 @@ function sampleSurface(imageX, imageY, surface) {
   return Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
 }
 
-function buildEndpointShape(layer, data, direction) {
-  const offsets = new Float32Array(data.positions.length);
-  const correction = layer.correction ?? {};
-  const centerX = layer.crop[0] + layer.crop[2] / 2;
-  const centerY = layer.crop[1] + layer.crop[3] / 2;
-  const radiusX = Math.max(1, layer.crop[2] / 2);
-
-  for (let vertex = 0; vertex < data.positions.length / 3; vertex += 1) {
-    const imageX = data.imagePoints[vertex * 2];
-    const imageY = data.imagePoints[vertex * 2 + 1];
-    const nx = (imageX - FACE_SURFACE.centerX) / FACE_SURFACE.radiusX;
-    const ny = (imageY - FACE_SURFACE.centerY) / FACE_SURFACE.radiusY;
-    const offset = vertex * 3;
-
-    if (layer.surface === 'face') {
-      const centerInfluence = Math.max(0, 1 - Math.abs(nx));
-      const jawInfluence = THREE.MathUtils.smoothstep(ny, 0.18, 0.92);
-      const cheekInfluence = Math.max(0, 1 - Math.abs(ny + 0.08));
-      offsets[offset] += direction * (
-        (correction.centerShift ?? 10) * centerInfluence
-        + (correction.jawShift ?? 7) * jawInfluence
-      );
-      offsets[offset] -= direction * Math.max(0, direction * nx)
-        * (correction.farCheek ?? 10) * cheekInfluence;
-      offsets[offset + 1] += jawInfluence
-        * ((correction.jawLift ?? 3) + (correction.jawCornerLift ?? 3) * Math.abs(nx));
-      offsets[offset + 2] += (correction.cheekDepth ?? 8) * cheekInfluence * centerInfluence;
-    } else if (layer.eye) {
-      const far = direction > 0 ? layer.eye === 'left' : layer.eye === 'right';
-      const scaleX = far
-        ? (correction.farScaleX ?? EYE_TURN_SETTINGS.farScaleX)
-        : (correction.nearScaleX ?? EYE_TURN_SETTINGS.nearScaleX);
-      const scaleY = far
-        ? (correction.farScaleY ?? EYE_TURN_SETTINGS.farScaleY)
-        : (correction.nearScaleY ?? EYE_TURN_SETTINGS.nearScaleY);
-      const baseX = data.positions[offset];
-      const baseY = data.positions[offset + 1];
-      offsets[offset] += (baseX - (centerX - HALF_MODEL)) * (scaleX - 1);
-      offsets[offset + 1] += (baseY - (HALF_MODEL - centerY)) * (scaleY - 1);
-    }
-
-    const featureShift = layer.featureShift ?? correction.shift ?? 0;
-    if (layer.group === 'features' || layer.eye || layer.group?.endsWith('Eye')) {
-      offsets[offset] += direction * featureShift;
-    }
-    if (layer.surface === 'frontHair' || layer.surface === 'backHair' || layer.surface === 'earArc') {
-      offsets[offset] += direction * (correction.shift ?? 0) * Math.max(0.25, 1 - Math.abs(nx));
-    }
-    if (layer.surface === 'accessory') offsets[offset] += direction * (correction.shift ?? 3);
-  }
-  return offsets;
+function assetUrl(path) {
+  return `${import.meta.env.BASE_URL}${path}`;
 }
 
-function buildPitchEndpointShape(layer, data, direction) {
-  const offsets = new Float32Array(data.positions.length);
-  const correction = layer.correction ?? {};
-  const centerX = layer.crop[0] + layer.crop[2] / 2;
-  const centerY = layer.crop[1] + layer.crop[3] / 2;
-  const centerWorldX = centerX - HALF_MODEL;
-  const centerWorldY = HALF_MODEL - centerY;
-
-  for (let vertex = 0; vertex < data.positions.length / 3; vertex += 1) {
-    const imageX = data.imagePoints[vertex * 2];
-    const imageY = data.imagePoints[vertex * 2 + 1];
-    const offset = vertex * 3;
-    const baseX = data.positions[offset];
-    const baseY = data.positions[offset + 1];
-    const nx = (imageX - FACE_SURFACE.centerX) / FACE_SURFACE.radiusX;
-    const ny = (imageY - FACE_SURFACE.centerY) / FACE_SURFACE.radiusY;
-
-    if (layer.surface === 'face') {
-      const jawInfluence = THREE.MathUtils.smoothstep(ny, 0.08, 0.78);
-      const cheekInfluence = Math.max(0, 1 - Math.abs(ny + 0.08));
-      offsets[offset] -= direction * (baseX - (FACE_SURFACE.centerX - HALF_MODEL))
-        * (correction.pitchJawScaleX ?? 0.03) * jawInfluence;
-      offsets[offset + 1] += direction * (correction.pitchShift ?? 4)
-        * (0.2 + jawInfluence * 0.8);
-      offsets[offset + 2] -= direction * (correction.pitchJawDepth ?? 3)
-        * jawInfluence * Math.max(0.2, 1 - Math.abs(nx)) * cheekInfluence;
-      continue;
-    }
-
-    if (layer.id === 'neck') {
-      const row = THREE.MathUtils.clamp((imageY - layer.crop[1]) / layer.crop[3], 0, 1);
-      const topInfluence = 1 - THREE.MathUtils.smoothstep(row, 0.05, 0.85);
-      offsets[offset] += direction * (baseX - centerWorldX)
-        * (correction.pitchScaleX ?? 0) * topInfluence;
-      offsets[offset + 1] += direction * (correction.pitchShift ?? 0) * topInfluence;
-      continue;
-    }
-
-    const scaleY = correction.pitchScaleY ?? 1;
-    offsets[offset + 1] += (baseY - centerWorldY) * (scaleY - 1);
-
-    if (layer.surface === 'frontHair' || layer.surface === 'backHair') {
-      const row = THREE.MathUtils.clamp((imageY - layer.crop[1]) / layer.crop[3], 0, 1);
-      const tipInfluence = THREE.MathUtils.smoothstep(row, 0.28, 0.95);
-      // Hair tips lag behind the face and therefore cover more of the eyes
-      // while looking down, instead of moving as a rigid face sticker.
-      offsets[offset + 1] -= direction * (
-        (correction.pitchShift ?? 0) * (0.25 + tipInfluence * 0.75)
-        + (correction.pitchBend ?? 0) * tipInfluence
-      );
-    } else {
-      offsets[offset + 1] += direction * (correction.pitchShift ?? 0);
-    }
-  }
-
-  return offsets;
-}
+const NO_DEPTH = Object.freeze({});
+const FACE_DEPTH_ONLY = Object.freeze({ face: 1 });
 
 export class MeshCharacterRenderer {
-  constructor(container, { onStats } = {}) {
+  constructor(container, { model, onStats } = {}) {
+    if (!model) throw new TypeError('MeshCharacterRenderer requires a model');
     this.container = container;
+    this.model = model;
     this.onStats = onStats;
     this.mode = 'B';
-    this.surfaceSettings = { ...DEFAULT_SURFACE_SETTINGS };
+    this.half = model.size / 2;
+    this.yawRadians = THREE.MathUtils.degToRad(model.limits.yawDeg);
+    this.pitchUpRadians = THREE.MathUtils.degToRad(model.limits.pitchUpDeg);
+    this.pitchDownRadians = THREE.MathUtils.degToRad(model.limits.pitchDownDeg);
+    this.rollRadians = THREE.MathUtils.degToRad(model.limits.rollDeg);
+    this.headPivot = {
+      x: model.pivots.head.x - this.half,
+      y: this.half - model.pivots.head.y,
+    };
+    this.rollPivot = {
+      x: model.pivots.roll.x - this.half,
+      y: this.half - model.pivots.roll.y,
+    };
+    this.surfaceSettings = { ...model.defaultSurfaceSettings };
     this.parameters = {
       headYaw: 0,
       headPitch: 0,
@@ -177,8 +71,8 @@ export class MeshCharacterRenderer {
     this.rollGroup = new THREE.Group();
     this.rollGroup.name = 'head-roll';
     this.rollGroup.position.set(
-      HEAD_ROLL_PIVOT_X - HEAD_PIVOT_X,
-      HEAD_ROLL_PIVOT_Y - HEAD_PIVOT_Y,
+      this.rollPivot.x - this.headPivot.x,
+      this.rollPivot.y - this.headPivot.y,
       0,
     );
     this.headGroup.add(this.rollGroup);
@@ -193,7 +87,7 @@ export class MeshCharacterRenderer {
 
     // Orthographic projection keeps every layer pixel-aligned at HeadYaw=0.
     // The real per-vertex Z values still create parallax after Y-axis rotation.
-    this.camera = new THREE.OrthographicCamera(-HALF_MODEL, HALF_MODEL, HALF_MODEL, -HALF_MODEL, 1, 4000);
+    this.camera = new THREE.OrthographicCamera(-this.half, this.half, this.half, -this.half, 1, 4000);
     this.camera.position.set(0, 0, 1800);
     this.camera.lookAt(0, 0, 0);
 
@@ -227,7 +121,7 @@ export class MeshCharacterRenderer {
   }
 
   async buildModel() {
-    const records = await Promise.all(ICHIGO_LAYERS.map(async (layer) => {
+    const records = await Promise.all(this.model.layers.map(async (layer) => {
       const texture = await this.loadTexture(layer);
       if (this.disposed) {
         texture.dispose();
@@ -245,8 +139,8 @@ export class MeshCharacterRenderer {
       crop: layer.crop,
       columns,
       rows,
-      textureWidth: MODEL_SIZE,
-      textureHeight: MODEL_SIZE,
+      textureWidth: this.model.size,
+      textureHeight: this.model.size,
     });
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
@@ -283,10 +177,10 @@ export class MeshCharacterRenderer {
 
     const parent = layer.group === 'body' ? this.scene : this.rollGroup;
     if (parent === this.rollGroup) {
-      mesh.position.x = -HEAD_ROLL_PIVOT_X;
-      mesh.position.y = -HEAD_ROLL_PIVOT_Y;
-      wireMesh.position.x = -HEAD_ROLL_PIVOT_X;
-      wireMesh.position.y = -HEAD_ROLL_PIVOT_Y;
+      mesh.position.x = -this.rollPivot.x;
+      mesh.position.y = -this.rollPivot.y;
+      wireMesh.position.x = -this.rollPivot.x;
+      wireMesh.position.y = -this.rollPivot.y;
     }
     parent.add(mesh, wireMesh);
 
@@ -301,14 +195,14 @@ export class MeshCharacterRenderer {
       imagePoints: data.imagePoints,
       basePositions: new Float32Array(data.positions),
       keyShapes: {
-        '-1': buildEndpointShape(layer, data, -1),
+        '-1': this.model.buildYawKeyShape(layer, data, -1),
         0: new Float32Array(data.positions.length),
-        1: buildEndpointShape(layer, data, 1),
+        1: this.model.buildYawKeyShape(layer, data, 1),
       },
       pitchKeyShapes: {
-        '-1': buildPitchEndpointShape(layer, data, -1),
+        '-1': this.model.buildPitchKeyShape(layer, data, -1),
         0: new Float32Array(data.positions.length),
-        1: buildPitchEndpointShape(layer, data, 1),
+        1: this.model.buildPitchKeyShape(layer, data, 1),
       },
       columns,
       rows,
@@ -326,8 +220,8 @@ export class MeshCharacterRenderer {
   }
 
   setSurfaceSettings(settings) {
-    this.surfaceSettings = { ...DEFAULT_SURFACE_SETTINGS, ...settings };
-    this.updateCamera();
+    this.surfaceSettings = { ...this.model.defaultSurfaceSettings, ...settings };
+    this.fitCamera();
     this.updateGeometry();
   }
 
@@ -336,15 +230,11 @@ export class MeshCharacterRenderer {
     this.updateGeometry();
   }
 
-  updateCamera() {
-    this.fitCamera();
-  }
-
   fitCamera() {
     const width = Math.max(1, this.container.clientWidth);
     const height = Math.max(1, this.container.clientHeight);
     const aspect = width / height;
-    const visibleHalf = HALF_MODEL;
+    const visibleHalf = this.half;
     if (aspect >= 1) {
       this.camera.left = -visibleHalf * aspect;
       this.camera.right = visibleHalf * aspect;
@@ -367,6 +257,11 @@ export class MeshCharacterRenderer {
     this.render();
   }
 
+  layerDepthWeights(layer) {
+    return this.model.depthWeights[layer.surface]
+      ?? (layer.group === 'body' ? NO_DEPTH : FACE_DEPTH_ONLY);
+  }
+
   updateGeometry() {
     if (!this.layers.length || this.disposed) return;
     const yaw = THREE.MathUtils.clamp(this.parameters.headYaw ?? 0, -1, 1);
@@ -377,26 +272,30 @@ export class MeshCharacterRenderer {
     const pitchCorrective = useCorrective ? this.surfaceSettings.pitchCorrective : 0;
     const faceDepth = this.surfaceSettings.faceDepth;
     const hairDepth = this.surfaceSettings.hairDepth;
+    const faceSurface = this.model.surfaces.face;
+    const hairSurface = this.model.surfaces.hair;
+    const eyeMotion = this.model.eyeMotion;
     const projectionScale = THREE.MathUtils.lerp(
       0.65,
       1.6,
       THREE.MathUtils.clamp(this.surfaceSettings.perspective, 0, 0.5) / 0.5,
     );
 
-    this.headGroup.position.x = HEAD_PIVOT_X;
-    this.headGroup.position.y = HEAD_PIVOT_Y;
-    this.headGroup.rotation.y = yaw * HEAD_YAW_RADIANS;
+    this.headGroup.position.x = this.headPivot.x;
+    this.headGroup.position.y = this.headPivot.y;
+    this.headGroup.rotation.y = yaw * this.yawRadians;
     this.headGroup.rotation.x = pitch < 0
-      ? pitch * HEAD_PITCH_UP_RADIANS
-      : pitch * HEAD_PITCH_DOWN_RADIANS;
+      ? pitch * this.pitchUpRadians
+      : pitch * this.pitchDownRadians;
     // Negate model-space rotation so positive HeadRoll matches the browser/CSS
     // convention used by the original guruguru prototype: clockwise on screen.
-    this.rollGroup.rotation.z = -roll * HEAD_ROLL_RADIANS;
+    this.rollGroup.rotation.z = -roll * this.rollRadians;
 
     for (const record of this.layers) {
       const layer = record.definition;
       const position = record.geometry.getAttribute('position');
       const centerY = layer.crop[1] + layer.crop[3] / 2;
+      const depthWeights = this.layerDepthWeights(layer);
       const eyeOpen = layer.eye === 'left'
         ? this.parameters.eyeOpenL
         : layer.eye === 'right' ? this.parameters.eyeOpenR : 1;
@@ -406,7 +305,7 @@ export class MeshCharacterRenderer {
       const shaped = useCorrective
         ? interpolateKeyShapes(yawShaped, record.pitchKeyShapes, pitch * pitchCorrective)
         : yawShaped;
-      const posedEyeCenterY = (HALF_MODEL - centerY)
+      const posedEyeCenterY = (this.half - centerY)
         + pitch * pitchCorrective * (layer.correction?.pitchShift ?? 0);
 
       for (let vertex = 0; vertex < position.count; vertex += 1) {
@@ -416,23 +315,12 @@ export class MeshCharacterRenderer {
         let x = shaped[offset];
         let y = shaped[offset + 1];
         let z = (layer.z ?? 0) + shaped[offset + 2] - record.basePositions[offset + 2];
-        const faceCap = sampleSurface(imageX, imageY, FACE_SURFACE);
-        const hairCap = sampleSurface(imageX, imageY, HAIR_SURFACE);
 
-        if (layer.surface === 'face') {
-          z += faceDepth * faceCap;
-        } else if (layer.surface === 'backHair') {
-          z += hairDepth * hairCap * 0.72;
-        } else if (layer.surface === 'frontHair') {
-          z += faceDepth * faceCap * 0.5 + hairDepth * hairCap;
-        } else if (layer.surface === 'earArc') {
-          z += faceDepth * faceCap * 0.55;
-        } else if (layer.surface === 'accessory') {
-          z += faceDepth * faceCap * 0.45 + hairDepth * hairCap;
-        } else if (layer.group !== 'body') {
-          // Eyes, brows, nose and mouth all sample the same face shell. Their
-          // local Z offsets only separate them slightly for parallax.
-          z += faceDepth * faceCap;
+        if (depthWeights.face) {
+          z += faceDepth * sampleSurface(imageX, imageY, faceSurface) * depthWeights.face;
+        }
+        if (depthWeights.hair) {
+          z += hairDepth * sampleSurface(imageX, imageY, hairSurface) * depthWeights.hair;
         }
 
         if (layer.hairMotion) {
@@ -457,16 +345,16 @@ export class MeshCharacterRenderer {
           // Collapse the open-mouth mesh toward the posed upper-lip line, the
           // vertex-level equivalent of the oc-live scaleY morph. The closed
           // mouth layer below stays fully opaque as the resting base.
-          const posedOriginY = (HALF_MODEL - layer.mouthMorph.originImageY)
+          const posedOriginY = (this.half - layer.mouthMorph.originImageY)
             + pitch * pitchCorrective * (layer.correction?.pitchShift ?? 0);
           y = (y - posedOriginY) * openness + posedOriginY;
         }
 
         if (layer.eye) {
-          y = (y - posedEyeCenterY) * Math.max(0.04, eyeOpen) + posedEyeCenterY;
+          y = (y - posedEyeCenterY) * Math.max(eyeMotion.minOpenScale, eyeOpen) + posedEyeCenterY;
           if (layer.iris) {
-            x += (this.parameters.eyeX ?? 0) * 6.5;
-            y += (this.parameters.eyeY ?? 0) * 3;
+            x += (this.parameters.eyeX ?? 0) * eyeMotion.irisTravelX;
+            y += (this.parameters.eyeY ?? 0) * eyeMotion.irisTravelY;
           }
         }
 
@@ -477,10 +365,11 @@ export class MeshCharacterRenderer {
       record.geometry.computeBoundingSphere();
 
       if (layer.iris) {
-        // A closing lid occludes the iris before the eyelash reaches its
-        // flattest key shape. Fading here avoids leaving a coloured iris line
-        // in the fully closed pose while the eyelash mesh forms the lid line.
-        record.material.opacity = THREE.MathUtils.smoothstep(eyeOpen, 0.08, 0.52);
+        record.material.opacity = THREE.MathUtils.smoothstep(
+          eyeOpen,
+          eyeMotion.irisFade[0],
+          eyeMotion.irisFade[1],
+        );
       } else if (layer.opacityParameter) {
         record.material.opacity = THREE.MathUtils.clamp(this.parameters[layer.opacityParameter] ?? 0, 0, 1);
       } else {

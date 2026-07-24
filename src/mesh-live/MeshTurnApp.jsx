@@ -4,6 +4,7 @@ import MeshCharacter from './MeshCharacter';
 import {
   DEFAULT_SURFACE_SETTINGS,
   ICHIGO_LAYERS,
+  ICHIGO_MODEL,
   PITCH_DOWN_LIMIT_DEG,
   PITCH_UP_LIMIT_DEG,
   ROLL_LIMIT_DEG,
@@ -208,7 +209,7 @@ function App() {
             </div>
           </div>
           <div className="character-frame">
-            <MeshCharacter ref={meshRef} mode={mode} wireframe={wireframe}
+            <MeshCharacter ref={meshRef} model={ICHIGO_MODEL} mode={mode} wireframe={wireframe}
               surfaceSettings={surfaceSettings} onReady={() => setReady(true)} onStats={setFps}></MeshCharacter>
             <ReferenceStack visible={reference}></ReferenceStack>
           </div>
