@@ -86,7 +86,10 @@ export const ICHIGO_LAYERS = [
   {
     id: 'mouth_mid', texture: 'oc-layers/mouth_mid.webp', crop: [448, 476, 94, 76],
     order: 53, group: 'features', surface: 'feature', grid: [3, 2], z: 43,
-    featureShift: 10, correction: { pitchShift: 3.6, pitchScaleY: 0.965 }, opacityParameter: 'mouthOpen',
+    featureShift: 10, correction: { pitchShift: 3.6, pitchScaleY: 0.965 },
+    // Open-mouth art scales down onto the upper lip line (image y ≈ 502,
+    // the 49% origin validated in oc-live) so mouthOpen morphs continuously.
+    mouthMorph: { parameter: 'mouthOpen', originImageY: 502 },
   },
   {
     id: 'eyebrow_L', texture: 'oc-mesh-layers/eyebrow_L.webp', crop: [490, 270, 205, 82],

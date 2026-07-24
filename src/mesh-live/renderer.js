@@ -448,6 +448,20 @@ export class MeshCharacterRenderer {
           y += Math.abs(motion) * (layer.hairMotion.lift ?? 0) * influence;
         }
 
+        if (layer.mouthMorph) {
+          const openness = THREE.MathUtils.clamp(
+            this.parameters[layer.mouthMorph.parameter] ?? 0,
+            0,
+            1,
+          );
+          // Collapse the open-mouth mesh toward the posed upper-lip line, the
+          // vertex-level equivalent of the oc-live scaleY morph. The closed
+          // mouth layer below stays fully opaque as the resting base.
+          const posedOriginY = (HALF_MODEL - layer.mouthMorph.originImageY)
+            + pitch * pitchCorrective * (layer.correction?.pitchShift ?? 0);
+          y = (y - posedOriginY) * openness + posedOriginY;
+        }
+
         if (layer.eye) {
           y = (y - posedEyeCenterY) * Math.max(0.04, eyeOpen) + posedEyeCenterY;
           if (layer.iris) {
@@ -467,8 +481,6 @@ export class MeshCharacterRenderer {
         // flattest key shape. Fading here avoids leaving a coloured iris line
         // in the fully closed pose while the eyelash mesh forms the lid line.
         record.material.opacity = THREE.MathUtils.smoothstep(eyeOpen, 0.08, 0.52);
-      } else if (layer.id === 'mouth') {
-        record.material.opacity = 1 - THREE.MathUtils.clamp(this.parameters.mouthOpen ?? 0, 0, 1);
       } else if (layer.opacityParameter) {
         record.material.opacity = THREE.MathUtils.clamp(this.parameters[layer.opacityParameter] ?? 0, 0, 1);
       } else {

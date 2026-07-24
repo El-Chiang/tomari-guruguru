@@ -72,6 +72,7 @@ function App() {
   const [yawDeg, setYawDeg] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [rollDeg, setRollDeg] = useState(0);
+  const [mouthManual, setMouthManual] = useState(0);
   const [pointerFollow, setPointerFollow] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [reference, setReference] = useState(false);
@@ -84,10 +85,12 @@ function App() {
   const yawRef = useRef(yawDeg);
   const pitchRef = useRef(pitch);
   const rollRef = useRef(rollDeg);
+  const mouthRef = useRef(mouthManual);
   const motionSettingsRef = useRef(motionSettings);
   yawRef.current = yawDeg;
   pitchRef.current = pitch;
   rollRef.current = rollDeg;
+  mouthRef.current = mouthManual;
   motionSettingsRef.current = motionSettings;
   const pitchDeg = pitchToDegrees(pitch);
 
@@ -111,6 +114,7 @@ function App() {
       controller.setImmediate({
         ...directedMotion,
         headRoll: clamp((directedMotion.headRoll ?? 0) + rollRef.current / ROLL_LIMIT_DEG),
+        mouthOpen: clamp((directedMotion.mouthOpen ?? 0) + mouthRef.current, 0, 1),
       });
       meshRef.current?.updateParameters(controller.update(delta));
       frame = requestAnimationFrame(tick);
@@ -158,6 +162,17 @@ function App() {
     const enabled = !motionSettings.autoRoll;
     if (enabled) setRollDeg(0);
     setMotion('autoRoll', enabled);
+  };
+
+  const chooseMouth = (value) => {
+    setMotion('autoTalk', false);
+    setMouthManual(value);
+  };
+
+  const toggleAutoTalk = () => {
+    const enabled = !motionSettings.autoTalk;
+    if (enabled) setMouthManual(0);
+    setMotion('autoTalk', enabled);
   };
 
   const choosePose = (yaw, nextPitch) => {
@@ -279,7 +294,17 @@ function App() {
           </section>
 
           <section>
-            <div className="section-title"><span>06</span><h2>手工曲面</h2></div>
+            <div className="section-title"><span>06</span><h2>口型</h2></div>
+            <div className="button-grid roll-controls">
+              <Toggle active={motionSettings.autoTalk} onClick={toggleAutoTalk}>随机口パク</Toggle>
+            </div>
+            <Range label="开口度" value={motionSettings.autoTalk ? 0 : mouthManual}
+              min={0} max={1} step={0.01} onChange={chooseMouth}></Range>
+            <p className="hint">闭口作底、中口网格向嘴上沿连续压缩，与 oc-live 的连续开口度同源。拖动滑杆会暂停随机口パク；目标值接口已预留给音量驱动。</p>
+          </section>
+
+          <section>
+            <div className="section-title"><span>07</span><h2>手工曲面</h2></div>
             <Range label="脸部深度" value={surfaceSettings.faceDepth} min={0} max={100} step={1}
               onChange={(value) => setSurface('faceDepth', value)}></Range>
             <Range label="头发壳层" value={surfaceSettings.hairDepth} min={0} max={70} step={1}

@@ -21,6 +21,7 @@ export const DEFAULT_MOTION_SETTINGS = Object.freeze({
   autoHair: true,
   hairAmplitude: 1 / 3,
   hairDuration: 3.6,
+  autoTalk: false,
 });
 
 function clamp(value, min = -1, max = 1) {
@@ -88,6 +89,9 @@ export class MotionDirector {
     this.nextSaccadeAt = this.range(0.9, 2.6);
     this.blinks = [];
     this.nextBlinkAt = this.range(1, 2.8);
+    this.mouthOpen = 0;
+    this.mouthTarget = 0;
+    this.nextMouthAt = 0;
   }
 
   range(min, max) {
@@ -181,6 +185,22 @@ export class MotionDirector {
     };
   }
 
+  updateMouth(enabled, delta) {
+    if (!enabled) {
+      this.mouthTarget = 0;
+    } else if (this.time >= this.nextMouthAt) {
+      // Same random cadence as the validated oc-live lip flap: mostly open
+      // syllables with occasional full closures between them.
+      this.mouthTarget = this.random() < 0.15 ? 0 : this.range(0.35, 1);
+      this.nextMouthAt = this.time + this.range(0.07, 0.16);
+    }
+    // Frame-rate independent equivalent of the 0.35-per-frame lerp at 60 fps.
+    const smoothing = 1 - Math.exp(-26 * delta);
+    this.mouthOpen += (this.mouthTarget - this.mouthOpen) * smoothing;
+    if (!enabled && this.mouthOpen < 0.001) this.mouthOpen = 0;
+    return clamp(this.mouthOpen, 0, 1);
+  }
+
   update(deltaSeconds = 1 / 60, settings = {}) {
     const delta = clamp(Number.isFinite(deltaSeconds) ? deltaSeconds : 0, 0, 0.1);
     this.time += delta;
@@ -199,6 +219,7 @@ export class MotionDirector {
     const eyeOpen = this.updateBlink(options.autoBlink);
     const headRoll = this.updateRoll(options.autoRoll, options.rollAmplitude, options.rollDuration);
     const hair = this.updateHair(options.autoHair, options.hairAmplitude, options.hairDuration, headRoll);
+    const mouthOpen = this.updateMouth(options.autoTalk, delta);
     return mixMotionParameters(
       {
         headRoll: 0,
@@ -206,6 +227,7 @@ export class MotionDirector {
         eyeY: 0,
         eyeOpenL: 1,
         eyeOpenR: 1,
+        mouthOpen: 0,
         hairFront: 0,
         hairBack: 0,
         hairAccessory: 0,
@@ -213,6 +235,7 @@ export class MotionDirector {
       [
         { mode: 'add', values: { headRoll } },
         { mode: 'add', values: hair },
+        { mode: 'add', values: { mouthOpen } },
         { mode: 'add', values: { eyeX: this.gaze.x * amplitude, eyeY: this.gaze.y * amplitude } },
         { mode: 'multiply', values: { eyeOpenL: eyeOpen, eyeOpenR: eyeOpen } },
       ],

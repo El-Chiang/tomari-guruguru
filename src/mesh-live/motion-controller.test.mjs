@@ -84,6 +84,47 @@ test('automatic head roll reaches its authored amplitude and can be disabled', (
   assert.equal(output.headRoll, 0);
 });
 
+test('random lip flap opens the mouth continuously and settles closed when disabled', () => {
+  const director = new MotionDirector({ random: () => 0.5 });
+  const settings = { autoBlink: false, autoSaccade: false, autoRoll: false, autoHair: false };
+
+  let output = director.update(0.1, { ...settings, autoTalk: false });
+  assert.equal(output.mouthOpen, 0);
+
+  const samples = [];
+  for (let frame = 0; frame < 12; frame += 1) {
+    output = director.update(1 / 60, { ...settings, autoTalk: true });
+    samples.push(output.mouthOpen);
+  }
+  assert.ok(output.mouthOpen > 0.3);
+  assert.ok(output.mouthOpen <= 1);
+  // Smoothing must produce intermediate values, not a binary texture swap.
+  assert.ok(samples.some((value) => value > 0.05 && value < 0.3));
+
+  for (let frame = 0; frame < 40; frame += 1) {
+    output = director.update(1 / 60, { ...settings, autoTalk: false });
+  }
+  assert.equal(output.mouthOpen, 0);
+});
+
+test('lip flap closures follow the random roll', () => {
+  const rolls = [0.1];
+  const director = new MotionDirector({ random: () => rolls[0] });
+  const settings = {
+    autoBlink: false, autoSaccade: false, autoRoll: false, autoHair: false, autoTalk: true,
+  };
+
+  let output;
+  for (let frame = 0; frame < 30; frame += 1) output = director.update(1 / 60, settings);
+  // A roll below 0.15 keeps scheduling closed-mouth targets, so the smoothed
+  // openness never climbs.
+  assert.ok(output.mouthOpen < 0.05);
+
+  rolls[0] = 0.9;
+  for (let frame = 0; frame < 30; frame += 1) output = director.update(1 / 60, settings);
+  assert.ok(output.mouthOpen > 0.5);
+});
+
 test('hair layers keep independent phase, amplitude, and roll lag', () => {
   const director = new MotionDirector({ random: () => 0.5 });
   let output;

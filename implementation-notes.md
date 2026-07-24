@@ -40,3 +40,10 @@ Implemented the first web HeadPitch pass on top of the existing HeadYaw mesh pro
 - Ported the original `2° / 3.6s` hair motion with the existing front/back/accessory amplitude ratios and phase offsets.
 - The mesh version keeps crown vertices almost fixed and increases displacement toward the tips instead of rotating each full-canvas layer as a rigid card.
 - Back hair and the accessory have their own motion parameters, and all three layers add a small counter-motion from HeadRoll to produce visible lag in composite poses.
+
+## 2026-07-24 — Continuous mouth openness
+
+- Replaced the two-state mouth crossfade with the continuous morph validated in oc-live: the closed mouth stays fully opaque as the base and the open-mouth mesh collapses vertex-wise toward the upper-lip line (image y ≈ 502, the 49% origin from oc-live).
+- The morph origin follows the posed pitch offset the same way the blink center does, so lip flaps stay aligned while nodding.
+- `MotionDirector` gained a lip-flap source with the oc-live cadence (70–160 ms targets, 15% closures, otherwise 0.35–1) and a frame-rate independent smoothing equivalent to the old 0.35-per-frame lerp.
+- The manual openness slider pauses the automatic lip flap, mirroring the HeadRoll manual/auto interaction; `autoTalk` stays off by default and the smoothed target remains the hook for future volume-driven speech.
