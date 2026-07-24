@@ -265,7 +265,21 @@ function App() {
           </section>
 
           <section>
-            <div className="section-title"><span>05</span><h2>手工曲面</h2></div>
+            <div className="section-title"><span>05</span><h2>头发二级摆动</h2></div>
+            <div className="button-grid roll-controls">
+              <Toggle active={motionSettings.autoHair}
+                onClick={() => setMotion('autoHair', !motionSettings.autoHair)}>自动摆动</Toggle>
+            </div>
+            <Range label="摆动幅度" value={motionSettings.hairAmplitude * 6}
+              min={0} max={6} step={0.2} unit="°"
+              onChange={(value) => setMotion('hairAmplitude', value / 6)}></Range>
+            <Range label="摆动周期" value={motionSettings.hairDuration} min={1.5} max={8} step={0.1} unit="s"
+              onChange={(value) => setMotion('hairDuration', value)}></Range>
+            <p className="hint">前发、后发和发饰使用不同幅度与相位；发根保持稳定，发梢会对歪头产生轻微滞后。</p>
+          </section>
+
+          <section>
+            <div className="section-title"><span>06</span><h2>手工曲面</h2></div>
             <Range label="脸部深度" value={surfaceSettings.faceDepth} min={0} max={100} step={1}
               onChange={(value) => setSurface('faceDepth', value)}></Range>
             <Range label="头发壳层" value={surfaceSettings.hairDepth} min={0} max={70} step={1}

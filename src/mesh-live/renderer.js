@@ -161,6 +161,9 @@ export class MeshCharacterRenderer {
       eyeOpenL: 1,
       eyeOpenR: 1,
       mouthOpen: 0,
+      hairFront: 0,
+      hairBack: 0,
+      hairAccessory: 0,
     };
     this.layers = [];
     this.disposed = false;
@@ -430,6 +433,19 @@ export class MeshCharacterRenderer {
           // Eyes, brows, nose and mouth all sample the same face shell. Their
           // local Z offsets only separate them slightly for parallax.
           z += faceDepth * faceCap;
+        }
+
+        if (layer.hairMotion) {
+          const row = THREE.MathUtils.clamp((imageY - layer.crop[1]) / layer.crop[3], 0, 1);
+          const tip = THREE.MathUtils.smoothstep(row, 0.16, 0.96);
+          const influence = THREE.MathUtils.lerp(layer.hairMotion.root ?? 0, 1, tip);
+          const motion = THREE.MathUtils.clamp(
+            this.parameters[layer.hairMotion.parameter] ?? 0,
+            -1,
+            1,
+          );
+          x += motion * (layer.hairMotion.sway ?? 0) * influence;
+          y += Math.abs(motion) * (layer.hairMotion.lift ?? 0) * influence;
         }
 
         if (layer.eye) {

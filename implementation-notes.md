@@ -34,3 +34,9 @@ Implemented the first web HeadPitch pass on top of the existing HeadYaw mesh pro
 - Automatic roll ports guruguru's default `±4° / 4s` idle tilt and remains adjustable up to `8°`.
 - A manual HeadRoll slider pauses the automatic source; re-enabling automatic roll resets the manual offset to avoid competing controls.
 - HeadRoll uses a nested transform group with its own pivot at the chin tip (`489, 570` in model-image coordinates); yaw/pitch keep the existing ear-axis pivot.
+
+## 2026-07-16 — Hair secondary motion
+
+- Ported the original `2° / 3.6s` hair motion with the existing front/back/accessory amplitude ratios and phase offsets.
+- The mesh version keeps crown vertices almost fixed and increases displacement toward the tips instead of rotating each full-canvas layer as a rigid card.
+- Back hair and the accessory have their own motion parameters, and all three layers add a small counter-motion from HeadRoll to produce visible lag in composite poses.

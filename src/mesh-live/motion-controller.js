@@ -18,6 +18,9 @@ export const DEFAULT_MOTION_SETTINGS = Object.freeze({
   autoRoll: true,
   rollAmplitude: 0.5,
   rollDuration: 4,
+  autoHair: true,
+  hairAmplitude: 1 / 3,
+  hairDuration: 3.6,
 });
 
 function clamp(value, min = -1, max = 1) {
@@ -162,6 +165,22 @@ export class MotionDirector {
     return Math.sin((this.time / safeDuration) * Math.PI * 2) * safeAmplitude;
   }
 
+  updateHair(enabled, amplitude, duration, headRoll) {
+    if (!enabled) return { hairFront: 0, hairBack: 0, hairAccessory: 0 };
+    const safeAmplitude = clamp(amplitude, 0, 1);
+    const safeDuration = Math.max(0.5, Number.isFinite(duration) ? duration : 3.6);
+    const angleAt = (phaseSeconds) => ((this.time - phaseSeconds) / safeDuration) * Math.PI * 2;
+    const front = Math.sin(angleAt(0));
+    const back = Math.sin(angleAt(0.5)) * 1.2;
+    const accessory = Math.sin(angleAt(0.15)) * 0.5;
+
+    return {
+      hairFront: clamp(front * safeAmplitude - headRoll * 0.18),
+      hairBack: clamp(back * safeAmplitude - headRoll * 0.3),
+      hairAccessory: clamp(accessory * safeAmplitude - headRoll * 0.1),
+    };
+  }
+
   update(deltaSeconds = 1 / 60, settings = {}) {
     const delta = clamp(Number.isFinite(deltaSeconds) ? deltaSeconds : 0, 0, 0.1);
     this.time += delta;
@@ -179,10 +198,21 @@ export class MotionDirector {
     const amplitude = clamp(options.eyeAmplitude, 0, 1.5);
     const eyeOpen = this.updateBlink(options.autoBlink);
     const headRoll = this.updateRoll(options.autoRoll, options.rollAmplitude, options.rollDuration);
+    const hair = this.updateHair(options.autoHair, options.hairAmplitude, options.hairDuration, headRoll);
     return mixMotionParameters(
-      { headRoll: 0, eyeX: 0, eyeY: 0, eyeOpenL: 1, eyeOpenR: 1 },
+      {
+        headRoll: 0,
+        eyeX: 0,
+        eyeY: 0,
+        eyeOpenL: 1,
+        eyeOpenR: 1,
+        hairFront: 0,
+        hairBack: 0,
+        hairAccessory: 0,
+      },
       [
         { mode: 'add', values: { headRoll } },
+        { mode: 'add', values: hair },
         { mode: 'add', values: { eyeX: this.gaze.x * amplitude, eyeY: this.gaze.y * amplitude } },
         { mode: 'multiply', values: { eyeOpenL: eyeOpen, eyeOpenR: eyeOpen } },
       ],

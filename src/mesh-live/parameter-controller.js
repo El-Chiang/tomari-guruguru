@@ -13,6 +13,9 @@ export class ParameterController {
       eyeOpenL: 1,
       eyeOpenR: 1,
       mouthOpen: 0,
+      hairFront: 0,
+      hairBack: 0,
+      hairAccessory: 0,
       ...initial,
     };
     this.target = { ...this.current };

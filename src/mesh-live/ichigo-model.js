@@ -42,6 +42,7 @@ export const ICHIGO_LAYERS = [
     id: 'back_hair', texture: 'oc-layers/back_hair.webp', crop: [176, 0, 690, 662],
     order: 10, group: 'head', surface: 'backHair', grid: [8, 8], z: -42,
     correction: { shift: 3, pitchShift: 2.2, pitchBend: 2.4 },
+    hairMotion: { parameter: 'hairBack', sway: 36, lift: 5, root: 0.08 },
   },
   {
     id: 'topwear', texture: 'oc-layers/topwear.webp', crop: [166, 526, 660, 250],
@@ -127,10 +128,12 @@ export const ICHIGO_LAYERS = [
     id: 'front_hair', texture: 'oc-layers/front_hair.webp', crop: [206, 16, 540, 650],
     order: 70, group: 'head', surface: 'frontHair', grid: [8, 9], z: 58,
     correction: { shift: 7, pitchShift: 3.2, pitchBend: 4.5 },
+    hairMotion: { parameter: 'hairFront', sway: 30, lift: 4, root: 0.06 },
   },
   {
     id: 'headwear', texture: 'oc-layers/headwear.webp', crop: [580, 210, 145, 145],
     order: 80, group: 'head', surface: 'accessory', grid: [3, 3], z: 84,
     correction: { shift: 4, pitchShift: 1.6, pitchScaleY: 0.985 },
+    hairMotion: { parameter: 'hairAccessory', sway: 10, lift: 2, root: 0.72 },
   },
 ];

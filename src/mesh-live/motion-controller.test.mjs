@@ -83,3 +83,34 @@ test('automatic head roll reaches its authored amplitude and can be disabled', (
   output = director.update(0.1, { autoBlink: false, autoSaccade: false, autoRoll: false });
   assert.equal(output.headRoll, 0);
 });
+
+test('hair layers keep independent phase, amplitude, and roll lag', () => {
+  const director = new MotionDirector({ random: () => 0.5 });
+  let output;
+  for (let frame = 0; frame < 9; frame += 1) {
+    output = director.update(0.1, {
+      autoBlink: false,
+      autoSaccade: false,
+      autoRoll: true,
+      rollAmplitude: 0.5,
+      rollDuration: 4,
+      autoHair: true,
+      hairAmplitude: 1 / 3,
+      hairDuration: 3.6,
+    });
+  }
+
+  assert.notEqual(output.hairFront, output.hairBack);
+  assert.notEqual(output.hairFront, output.hairAccessory);
+  assert.ok(Math.abs(output.hairBack) <= 1);
+
+  output = director.update(0.1, {
+    autoBlink: false,
+    autoSaccade: false,
+    autoRoll: false,
+    autoHair: false,
+  });
+  assert.equal(output.hairFront, 0);
+  assert.equal(output.hairBack, 0);
+  assert.equal(output.hairAccessory, 0);
+});
