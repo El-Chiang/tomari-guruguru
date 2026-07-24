@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import MeshCharacter from './MeshCharacter';
 import {
@@ -10,11 +10,10 @@ import {
   ROLL_LIMIT_DEG,
   YAW_LIMIT_DEG,
 } from './ichigo-model';
-import { DEFAULT_MOTION_SETTINGS, MotionDirector } from './motion-controller';
-import { ParameterController, clamp } from './parameter-controller';
+import { CharacterRig } from './character-rig';
+import { DEFAULT_MOTION_SETTINGS } from './motion-controller';
+import { clamp } from './parameter-controller';
 import './mesh-turn.css';
-
-const { useCallback } = React;
 
 const REFERENCE_LAYERS = [
   'back_hair', 'topwear', 'neck', 'ears', 'face', 'nose', 'mouth',
@@ -67,8 +66,7 @@ function Toggle({ children, active, onClick }) {
 }
 
 function App() {
-  const controller = useMemo(() => new ParameterController(), []);
-  const motionDirector = useMemo(() => new MotionDirector(), []);
+  const rig = useMemo(() => new CharacterRig(), []);
   const [mode, setMode] = useState('B');
   const [yawDeg, setYawDeg] = useState(0);
   const [pitch, setPitch] = useState(0);
@@ -83,16 +81,6 @@ function App() {
   const [motionSettings, setMotionSettings] = useState({ ...DEFAULT_MOTION_SETTINGS });
   const stageRef = useRef(null);
   const meshRef = useRef(null);
-  const yawRef = useRef(yawDeg);
-  const pitchRef = useRef(pitch);
-  const rollRef = useRef(rollDeg);
-  const mouthRef = useRef(mouthManual);
-  const motionSettingsRef = useRef(motionSettings);
-  yawRef.current = yawDeg;
-  pitchRef.current = pitch;
-  rollRef.current = rollDeg;
-  mouthRef.current = mouthManual;
-  motionSettingsRef.current = motionSettings;
   const pitchDeg = pitchToDegrees(pitch);
 
   const setSurface = useCallback((name, value) => {
@@ -104,45 +92,39 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let frame = 0;
-    let previous = performance.now();
-    const tick = (now) => {
-      const delta = Math.min(0.05, (now - previous) / 1000);
-      previous = now;
-      controller.setTarget('headYaw', yawRef.current / YAW_LIMIT_DEG);
-      controller.setTarget('headPitch', pitchRef.current);
-      const directedMotion = motionDirector.update(delta, motionSettingsRef.current);
-      controller.setImmediate({
-        ...directedMotion,
-        headRoll: clamp((directedMotion.headRoll ?? 0) + rollRef.current / ROLL_LIMIT_DEG),
-        mouthOpen: clamp((directedMotion.mouthOpen ?? 0) + mouthRef.current, 0, 1),
-      });
-      meshRef.current?.updateParameters(controller.update(delta));
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [controller, motionDirector]);
+    rig.start((parameters) => meshRef.current?.updateParameters(parameters));
+    return () => rig.stop();
+  }, [rig]);
+
+  useEffect(() => {
+    rig.setMotionSettings(motionSettings);
+  }, [rig, motionSettings]);
+
+  useEffect(() => {
+    rig.setPose({
+      yaw: yawDeg / YAW_LIMIT_DEG,
+      pitch,
+      roll: rollDeg / ROLL_LIMIT_DEG,
+      mouthOpen: mouthManual,
+    });
+  }, [rig, yawDeg, pitch, rollDeg, mouthManual]);
 
   useEffect(() => {
     if (!pointerFollow && !motionSettings.eyeFollow) return undefined;
     const onMove = (event) => {
-      const bounds = stageRef.current?.getBoundingClientRect();
-      if (!bounds) return;
-      const normalizedX = clamp((event.clientX - (bounds.left + bounds.width / 2)) / (bounds.width * 0.42));
-      const normalizedY = clamp((event.clientY - (bounds.top + bounds.height / 2)) / (bounds.height * 0.42));
-      // DOM Y grows downward while the eye mesh uses model-space Y growing
-      // upward. HeadPitch intentionally keeps the DOM direction (down = nod
-      // down), but gaze must invert it so the irises follow the pointer.
-      motionDirector.setPointer(normalizedX, -normalizedY);
+      const pointer = CharacterRig.normalizePointer(event, stageRef.current);
+      if (!pointer) return;
+      rig.setPointer(pointer.x, pointer.y);
       if (pointerFollow) {
-        setYawDeg(normalizedX * YAW_LIMIT_DEG);
-        setPitch(normalizedY);
+        // HeadPitch keeps the DOM direction (pointer down = nod down), so it
+        // undoes the model-space Y inversion the gaze source needs.
+        setYawDeg(pointer.x * YAW_LIMIT_DEG);
+        setPitch(-pointer.y);
       }
     };
     window.addEventListener('pointermove', onMove);
     return () => window.removeEventListener('pointermove', onMove);
-  }, [motionDirector, motionSettings.eyeFollow, pointerFollow]);
+  }, [rig, motionSettings.eyeFollow, pointerFollow]);
 
   const chooseYaw = (value) => {
     setPointerFollow(false);
@@ -263,7 +245,7 @@ function App() {
             <Range label="扫视等待" value={motionSettings.idleDelay} min={0.4} max={4} step={0.1} unit="s"
               onChange={(value) => setMotion('idleDelay', value)}></Range>
             <button className="reset" type="button"
-              onClick={() => motionDirector.triggerBlink({ duration: 0.65 })}>眨眼测试</button>
+              onClick={() => rig.triggerBlink({ duration: 0.65 })}>眨眼测试</button>
             <p className="hint">鼠标移动时眼球优先跟随；静止后由随机扫视接管。眨眼会继续叠加在当前转头和点头姿态上。</p>
           </section>
 
